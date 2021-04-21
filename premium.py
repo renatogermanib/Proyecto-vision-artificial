@@ -8,6 +8,13 @@ def ocr(ruta_video):
 
 	#tiempo_inicial = time.time()
 
+	dic = [] #genera lista vacía
+
+	with open('/home/viruta/Desktop/Archivos/PROGRAMA/fuente.csv') as archivo: #abre el csv como "archivo"
+		lector = csv.reader(archivo) #DictReader lee el documento como un diccionario, tomando la cabecera de la columna como las keys
+		for n in lector: 
+			dic.append(n) #llenamos lista vacía con la iteración del objeto lector
+
 	aux2, aux3, aux4, aux5, aux6, aux7, aux8, aux9 = ('', '', '', '', '', '', '', '') #variables auxiliar
 	index = 0 #creamos un contador
 
@@ -40,7 +47,7 @@ def ocr(ruta_video):
 
 					_,binary2 = cv2.threshold(gris, z, 255, cv2.THRESH_BINARY) #creamos una binarización dinámica
 
-					#TIPO:
+					#MODELO DE NEGOCIO:
 					x3, y3, h3, w3 = 150, 155, 23, 600
 					ROI3 = binary2[y3:y3+h3, x3:x3+w3] #hacemos uso de binary2
 					#cv2.imshow('roi3', ROI3)
@@ -48,10 +55,12 @@ def ocr(ruta_video):
 					aux3 = pytesseract.image_to_string(ROI3).strip() #extraemos el dato modelo de negocio
 					#print('modelo de negocio: ', aux3)
 
-					#CORRECCION DE DATOS:
+					#BÚSQUEDA DE DATOS:
 					#modelo de negocio:
-					if ('Premium' in aux3):
-						modelo = 'Premium'
+					for dato in dic: #recorre la fuente de información
+
+						if (dato[1] in aux3):
+							modelo = 'Premium'
 			
 			if (index == 160): #analizamos el frame 160
 				
@@ -108,42 +117,44 @@ def ocr(ruta_video):
 					aux6 = pytesseract.image_to_string(ROI6).strip() #extraemos el dato agno
 					#print('agno: ', aux6)
 
-					#CORRECCION DE DATOS:
+					#BÚSQUEDA DE DATOS:
 					#proveedores:
-					if ('WILD' in aux2):
-						proveedor = 'WILD'
-					if ('GEOGRAPHIC' in aux2):
-						proveedor = 'National Geographic'
-					if ('NATIONAL' in aux2):
-						proveedor = 'National Geographic'
-					if ('PREMIUM' in aux2):
-						proveedor = 'STAR'
-					if ('FOX' in aux2):
-						proveedor = 'STAR'
+					for dato in dic: #recorre la fuente de información
 
-					#categorias:
-					if ('DOCUMENTAL' in aux4):
-						categoria = 'Documental'
-					if ('DRAMA' in aux4):
-						categoria = 'Drama'
-					
-					#calidades:
-					if ('HD' in aux5):
-						calidad = 'HD'
+						if (dato[0] in aux2):
+							proveedor = 'WILD'
+						if (dato[0] in aux2):
+							proveedor = 'National Geographic'
+						if (dato[0] in aux2):
+							proveedor = 'National Geographic'
+						if (dato[0] in aux2):
+							proveedor = 'STAR'
+						if (dato[0] in aux2):
+							proveedor = 'STAR'
 
-					#agnos:
-					if ('2019' in aux6):
-						agno = '2019'
-					if ('2016' in aux6):
-						agno = '2016'
-					if ('2014' in aux6):
-						agno = '2014'
+						#categorias:
+						if (dato[2] in aux4):
+							categoria = 'Documental'
+						if (dato[2] in aux4):
+							categoria = 'Drama'
+						
+						#calidades:
+						if (dato[3] in aux5):
+							calidad = 'HD'
+
+						#agnos:
+						if (dato[4] in aux6):
+							agno = '2019'
+						if (dato[4] in aux6):
+							agno = '2016'
+						if (dato[4] in aux6):
+							agno = '2014'
 				
 		if (cv2.waitKey(10) & 0xFF == ord('s')): #especificado en documentacion de opencv->necesario para procesadores de 64bits
 			print('se ha detenido la ejecucion')
 			break #si se presiona la letra S se detendra el programa
 	
-	with open('Datos.csv', mode='a', newline='') as Escritura_Datos:
+	with open('titulos.csv', mode='a', newline='') as Escritura_Datos:
 		writer = csv.writer(Escritura_Datos)
 		writer.writerow([titulo, proveedor, modelo, categoria, calidad, agno, aux9])
 
@@ -152,3 +163,21 @@ def ocr(ruta_video):
 
 	video.release()
 	cv2.destroyAllWindows()
+
+if __name__ == '__main__':
+
+	#ocr('/home/viruta/Desktop/Archivos/PROGRAMA/Premium/ThisIsUs_Video.mp4')
+	'''
+	dic = []
+
+	with open('/home/viruta/Desktop/Archivos/PROGRAMA/fuente.csv') as archivo: #abre el csv como "archivo"
+		lector = csv.reader(archivo) #DictReader lee el documento como un diccionario, tomando la cabecera de la columna como las keys
+		for n in lector: 
+			dic.append(n) #llenamos lista vacía con la iteración del objeto lector
+
+	dato = 'NATIONAL'
+	for x in dic:
+		if (dato in x[0]):
+			proveedor = x[0]
+	print(proveedor)
+	'''

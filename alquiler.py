@@ -7,6 +7,13 @@ import time
 def ocr(ruta_video):
 
 	#tiempo_inicial = time.time()
+	
+	dic = [] #genera lista vacía
+
+	with open('/home/viruta/Desktop/Archivos/PROGRAMA/fuente.csv') as archivo: #abre el csv como "archivo"
+		lector = csv.reader(archivo) #DictReader lee el documento como un diccionario, tomando la cabecera de la columna como las keys
+		for n in lector: 
+			dic.append(n) #llenamos lista vacía con la iteración del objeto lector
 
 	aux2, aux3, aux4, aux5, aux6, aux7, aux8, aux9 = ('', '', '', '', '', '', '', '') #variables auxiliar
 
@@ -31,7 +38,7 @@ def ocr(ruta_video):
 			#cv2.imshow('video', frame) #mostramos el video
 			#cv2.moveWindow('video',0,0) #movemos la ventana
 			
-			if (index == 60): #analizamos el frame 60
+			if (index == 60): #analiza el frame 60
 
 				gris = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) #convertimos a escala de grises, creamos la variable aqui para que no se deba crear en cada frame%20==0
 
@@ -47,10 +54,12 @@ def ocr(ruta_video):
 					aux3 = pytesseract.image_to_string(ROI3).strip() #extraemos el dato modelo de negocio
 					#print('modelo de negocio: ', aux3)
 
-					#CORRECCION DE DATOS:
+					#BÚSQUEDA DE DATOS:
 					#modelo de negocio:
-					if ('Arriendo' in aux3):
-						modelo = 'Arriendo'
+					for dato in dic: #recorre la fuente de información
+
+						if (dato[1] in aux3):
+							modelo = 'Arriendo'
 				
 			if (index == 260): #analizamos el frame 260
 
@@ -101,31 +110,33 @@ def ocr(ruta_video):
 					aux6 = pytesseract.image_to_string(ROI6).strip() #extraemos el dato agno
 					#print('agno: ', aux4)
 
-					#CORRECCION DE DATOS:
+					#BÚSQUEDA DE DATOS:
 					#categorias:
-					if ('ACCIÓN' in aux4):
-						categoria = 'Acción'
-					if ('TERROR' in aux4):
-						categoria = 'Terror'
-					if ('COMEDIA' in aux4):
-						categoria = 'Comedia'
+					for dato in dic: #recorre la fuente de información
 
-					#calidades:
-					if ('HD' in aux5):
-						calidad = 'HD'
+						if (dato[2] in aux4):
+							categoria = 'Acción'
+						if (dato[2] in aux4):
+							categoria = 'Terror'
+						if (dato[2] in aux4):
+							categoria = 'Comedia'
 
-					#agnos:
-					if ('2017' in aux6):
-						agno = '2017'
-					if ('2019' in aux6):
-						agno = '2019'
+						#calidades:
+						if (dato[3] in aux5):
+							calidad = 'HD'
+
+						#agnos:
+						if (dato[4] in aux6):
+							agno = '2017'
+						if (dato[4] in aux6):
+							agno = '2019'
 				
 				
 		if (cv2.waitKey(10) & 0xFF == ord('s')): #especificado en documentacion de opencv->necesario para procesadores de 64bits
 			print('se ha detenido la ejecucion')
 			break #si se presiona la letra S se detendra el programa
 	
-	with open('Datos.csv', mode='a', newline='') as Escritura_Datos:
+	with open('titulos.csv', mode='a', newline='') as Escritura_Datos:
 		writer = csv.writer(Escritura_Datos)
 		writer.writerow([titulo, aux2, modelo, categoria, calidad, agno, precio])
 
@@ -134,3 +145,7 @@ def ocr(ruta_video):
 
 	video.release()
 	cv2.destroyAllWindows()
+
+if __name__ == '__main__':
+
+	ocr('/home/viruta/Desktop/Archivos/PROGRAMA/Alquiler/Sumergidos_Video.mp4')

@@ -8,6 +8,13 @@ def ocr(ruta_video):
 
 	#tiempo_inicial = time.time()
 
+	dic = [] #genera lista vacía
+
+	with open('/home/viruta/Desktop/Archivos/PROGRAMA/fuente.csv') as archivo: #abre el csv como "archivo"
+		lector = csv.reader(archivo) #DictReader lee el documento como un diccionario, tomando la cabecera de la columna como las keys
+		for n in lector:
+			dic.append(n) #llenamos lista vacía con la iteración del objeto lector
+
 	aux2, aux3, aux4, aux5, aux6, aux7, aux8, aux9 = ('', '', '', '', '', '', '', '') #variables auxiliar
 	
 	index = 0
@@ -72,35 +79,33 @@ def ocr(ruta_video):
 					aux6 = pytesseract.image_to_string(ROI6).strip() #extraemos el dato agno
 					#print('agno: ', aux4)
 
-					#CORRECCION DE DATOS:
-					#proveedores:
-					if (len(aux2) == 0): #si el dato proveedor se encuentra vacio quiere decir que VOD no ha especificado ningun proveedor en especifico
-						proveedor = 'Independiente'
-
-					#tipo:
+					#BÚSQUEDA DE DATOS:
+					#modelo de negocio:
 					if (len(aux3) == 0): #si modelo de negocio esta vacio se asume que es gratiuito
 						modelo = 'Gratis'
 
 					#categorias:
-					if ('DRAMA' == aux4): #usamos == para que esta condicion se pueda diferenciar de la siguiente
-						categoria = 'Drama'
-						#print(categoria)
-					if ('ACCIÓN' == aux4):
-						categoria = 'Acción'
-						#print(categoria)
+					for dato in dic: #recorre la fuente de información
 
-					#calidades:
-					if ('HD' in aux5):
-						calidad = 'HD'
-						#print(calidad)
+						if (dato[2] == aux4):
+							categoria = 'Drama'
+							#print(categoria)
+						if (dato[2] == aux4):
+							categoria = 'Acción'
+							#print(categoria)
 
-					#agnos:
-					if ('2019' in aux6):
-						agno = '2019'
-						#print(agno)
-					if ('2020' in aux6):
-						agno = '2020'
-						#print(agno)
+						#calidades:
+						if (dato[3] in aux5):
+							calidad = 'HD'
+							#print(calidad)
+
+						#agnos:
+						if (dato[4] in aux6):
+							agno = '2019'
+							#print(agno)
+						if (dato[4] in aux6):
+							agno = '2020'
+							#print(agno)
 			
 			if (index == 440): #analizamos el frame 440
 				
@@ -124,31 +129,37 @@ def ocr(ruta_video):
 					aux8 = pytesseract.image_to_string(ROI8).strip() #extraemos el dato episodios
 					#print('episodios: ', aux8)
 
-					#CORRECCION DE DATOS:
+					#BÚSQUEDA DE DATOS:
 					#temporadas:
-					if ('Temporada 01' == aux7):
-						temporadas = '1ra'
-					if ('Temporada 02' == aux7):
-						temporadas = '2da'
+					for dato in dic: #recorre la fuente de información
 
-					#episodios: (utilizamos la condicion == para que la primera y tercera condicion no se cumplan simultaneamente)
-					if ('Episodios 1' in aux8):
-						episodios = '1'
-					if ('Episodios 10' == aux8):
-						episodios = '10'
-					if ('Episodios 5' == aux8):
-						episodios = '5'
+						if (dato[5] == aux7):
+							temporadas = '1ra'
+						if (dato[5] == aux7):
+							temporadas = '2da'
+
+						#episodios: (utilizamos la condicion == para que la primera y tercera condicion no se cumplan simultaneamente)
+						if (dato[6] in aux8):
+							episodios = '1'
+						if (dato[6] == aux8):
+							episodios = '10'
+						if (dato[6] == aux8):
+							episodios = '5'
 				
 		if (cv2.waitKey(10) & 0xFF == ord('s')): #especificado en documentacion de opencv->necesario para procesadores de 64bits
 			print('se ha detenido la ejecucion')
 			break #si se presiona la letra S se detendra el programa
-
-	with open('Datos.csv', mode='a', newline='') as Escritura_Datos:
+	
+	with open('series.csv', mode='a', newline='') as Escritura_Datos:
 		writer = csv.writer(Escritura_Datos)
-		writer.writerow([titulo, aux2, modelo, categoria, calidad, agno, aux9])
-
+		writer.writerow([titulo, aux2, modelo, categoria, calidad, agno, temporadas, episodios])
+	
 	#tiempo_final = (time.time()) #asignamos tiempo final
 	#print('\ntiempo de ejecución series: ', ("{0:.2f}".format(tiempo_final - tiempo_inicial)), 'seg.') #calculamos y printiamos el tiempo total de ejecucion
 
 	video.release()
 	cv2.destroyAllWindows()
+
+if __name__ == '__main__':
+
+	ocr('/home/viruta/Desktop/Archivos/PROGRAMA/Series/Chernobyl_Video.mp4')
