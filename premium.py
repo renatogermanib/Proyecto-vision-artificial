@@ -8,14 +8,37 @@ def ocr(ruta_video):
 
 	#tiempo_inicial = time.time()
 
-	dic = [] #genera lista vacía
+	l = [] #genera lista vacía
+
+	l1, l2, l3, l4, l5, l6, l7 = [], [], [], [], [], [], [] #listas para almacenar las columnas de cada dato
 
 	with open('/home/viruta/Desktop/Archivos/PROGRAMA/fuente.csv') as archivo: #abre el csv como "archivo"
-		lector = csv.reader(archivo) #DictReader lee el documento como un diccionario, tomando la cabecera de la columna como las keys
-		for n in lector: 
-			dic.append(n) #llenamos lista vacía con la iteración del objeto lector
+		lector = csv.reader(archivo) #creación de objeto encargado de leer el csv
+		for fila in lector: 
+			l.append(fila) #creación de lista con todos los datos del documento csv
+
+	tamagno = len(l) #longitud de las columnas, se utilizará para recorrer las columnas completas
+
+	for x in range(1,tamagno): #comienza desde la primera para no tomar en cuenta la cabecera
+		l1.append((l[x][0])) #recorre las filas con x especificando solo una columna, añadiendo estos datos a las listas creadas anteriormente
+		l2.append((l[x][1]))
+		l3.append((l[x][2]))
+		l4.append((l[x][3]))
+		l5.append((l[x][4]))
+		l6.append((l[x][5]))
+		l7.append((l[x][6]))
+	
+	#ELIMINAR DATOS VACÍOS EN LISTA
+	l_proveedores = list(filter(bool, l1))
+	l_modelos = list(filter(bool, l2))
+	l_categorias = list(filter(bool, l3))
+	l_calidades = list(filter(bool, l4))
+	l_agnos = list(filter(bool, l5))
+	l_temporadas = list(filter(bool, l6))
+	l_episodios = list(filter(bool, l7))
 
 	aux2, aux3, aux4, aux5, aux6, aux7, aux8, aux9 = ('', '', '', '', '', '', '', '') #variables auxiliar
+	
 	index = 0 #creamos un contador
 
 	video = cv2.VideoCapture(ruta_video)
@@ -53,15 +76,21 @@ def ocr(ruta_video):
 					#cv2.imshow('roi3', ROI3)
 					#cv2.moveWindow('roi3',600,600)
 					aux3 = pytesseract.image_to_string(ROI3).strip() #extraemos el dato modelo de negocio
-					#print('modelo de negocio: ', aux3)
+					if (aux3 == ''):
+						aux3 = '@@@'
+					print('modelo de negocio: ', aux3)
 
 					#BÚSQUEDA DE DATOS:
 					#modelo de negocio:
-					for dato in dic: #recorre la fuente de información
+					for dato1 in l_modelos: #recorre la fuente de información
+						if (aux3 == dato1):
+							modelo = dato1
+							break
+						elif (aux3 in dato1):
+							modelo = dato1
+						elif (dato1 in aux3):
+							modelo = dato1
 
-						if (dato[1] in aux3):
-							modelo = 'Premium'
-			
 			if (index == 160): #analizamos el frame 160
 				
 				#TITULO: (el titulo debe estar fuera del recorrido de umbralizaciones, ya que debe ser un dato exacto, debido a que que no tenemos una fuente de conocimiento para comparar los datos)
@@ -91,7 +120,14 @@ def ocr(ruta_video):
 					#cv2.imshow('roi2', ROI2)
 					#cv2.moveWindow('roi2',600,600)
 					aux2 = pytesseract.image_to_string(ROI2).strip() #extraemos el dato proveedor
+					if (len(aux2) < 4):
+						aux2 = '@@@'
 					#print('proveedor: ', aux2)
+					
+					#SEPARACIÓN DE DATOS:
+					var = ''.join(aux2) #genera un string en base a la lista que extrae la herramienta
+					separacion_p = var.split() #generamos otra lista con elementos separados, esos elementos se compararán con la fuente
+					
 
 					#CATEGORIA:
 					x4, y4, h4, w4 = 150, 177, 20, 113
@@ -99,6 +135,8 @@ def ocr(ruta_video):
 					#cv2.imshow('roi4', ROI4)
 					#cv2.moveWindow('roi4',400,400)
 					aux4 = pytesseract.image_to_string(ROI4).strip() #extraemos el dato categoria
+					if (aux4 == ''):
+						aux4 = '@@@'
 					#print('categoria: ', aux4)
 
 					#CALIDAD:
@@ -107,6 +145,8 @@ def ocr(ruta_video):
 					#cv2.imshow('roi5', ROI5)
 					#cv2.moveWindow('roi5',400,400)
 					aux5 = pytesseract.image_to_string(ROI5).strip() #extraemos el dato calidad
+					if (aux5 == ''):
+						aux5 = '@@@'
 					#print('calidad: ', aux5)
 
 					#AGNO:
@@ -115,40 +155,54 @@ def ocr(ruta_video):
 					#cv2.imshow('roi6', ROI6)
 					#cv2.moveWindow('roi6',600,600)
 					aux6 = pytesseract.image_to_string(ROI6).strip() #extraemos el dato agno
+					if (aux6 == ''):
+						aux6 = '@@@'
 					#print('agno: ', aux6)
 
 					#BÚSQUEDA DE DATOS:
 					#proveedores:
-					for dato in dic: #recorre la fuente de información
+					for dato2 in l_proveedores: #recorre la fuente de información
+						if (separacion_p[0] == dato2):
+							proveedor = dato2
+							print(True, 'condicion 1')
+							break
+						elif (separacion_p[0] in dato2):
+							proveedor = dato2
+							print(True, 'condicion 2')
+						elif (dato2 in separacion_p[0]):
+							proveedor = dato2
+							print(True, 'condicion 3')
+					
 
-						if (dato[0] in aux2):
-							proveedor = 'WILD'
-						if (dato[0] in aux2):
-							proveedor = 'National Geographic'
-						if (dato[0] in aux2):
-							proveedor = 'National Geographic'
-						if (dato[0] in aux2):
-							proveedor = 'STAR'
-						if (dato[0] in aux2):
-							proveedor = 'STAR'
+					#categorias:
+					for dato3 in l_categorias:
+						if (aux4 == dato3):
+							categoria = dato3
+							break
+						elif (aux4 in dato3):
+							categoria = dato3
+						elif (dato3 in aux4):
+							categoria = dato3
 
-						#categorias:
-						if (dato[2] in aux4):
-							categoria = 'Documental'
-						if (dato[2] in aux4):
-							categoria = 'Drama'
-						
-						#calidades:
-						if (dato[3] in aux5):
-							calidad = 'HD'
+					#calidades:
+					for dato4 in l_calidades:
+						if (aux5 == dato4):
+							calidad = dato4
+							break
+						elif (aux5 in dato4):
+							calidad = dato4
+						elif (dato4 in aux5):
+							calidad = dato4
 
-						#agnos:
-						if (dato[4] in aux6):
-							agno = '2019'
-						if (dato[4] in aux6):
-							agno = '2016'
-						if (dato[4] in aux6):
-							agno = '2014'
+					#agnos:
+					for dato5 in l_agnos:	
+						if (aux6 == dato5):
+							agno = dato5
+							break
+						if (aux6 in dato5):
+							agno = dato5
+						if (dato5 in aux6):
+							agno = dato5
 				
 		if (cv2.waitKey(10) & 0xFF == ord('s')): #especificado en documentacion de opencv->necesario para procesadores de 64bits
 			print('se ha detenido la ejecucion')
@@ -166,18 +220,9 @@ def ocr(ruta_video):
 
 if __name__ == '__main__':
 
-	#ocr('/home/viruta/Desktop/Archivos/PROGRAMA/Premium/ThisIsUs_Video.mp4')
+	ocr('/home/viruta/Desktop/Archivos/PROGRAMA/Premium/GuerrillaDelOro_Video.mp4')
 	'''
-	dic = []
-
-	with open('/home/viruta/Desktop/Archivos/PROGRAMA/fuente.csv') as archivo: #abre el csv como "archivo"
-		lector = csv.reader(archivo) #DictReader lee el documento como un diccionario, tomando la cabecera de la columna como las keys
-		for n in lector: 
-			dic.append(n) #llenamos lista vacía con la iteración del objeto lector
-
-	dato = 'NATIONAL'
-	for x in dic:
-		if (dato in x[0]):
-			proveedor = x[0]
-	print(proveedor)
+	'/home/viruta/Desktop/Archivos/PROGRAMA/Premium/ThisIsUs_Video.mp4'
+	'/home/viruta/Desktop/Archivos/PROGRAMA/Premium/PlanetaHostil_Video.mp4'
+	'/home/viruta/Desktop/Archivos/PROGRAMA/Premium/GuerrillaDelOro_Video.mp4'
 	'''
