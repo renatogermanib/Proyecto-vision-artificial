@@ -13,7 +13,7 @@ def ocr(ruta_video):
 
 	l = [] #genera lista vacía
 
-	l1, l2, l3, l4, l5, l6, l7 = [], [], [], [], [], [], [] #listas para almacenar las columnas de cada dato
+	l1, l2, l3, l4, l5, l6, l7 = [], [], [], [], [], [], [] #listas para almacenar cada columna de cada dato de la fuente
 
 	with open('/home/viruta/Desktop/Archivos/PROGRAMA/fuente.csv') as archivo: #abre el csv como "archivo"
 		lector = csv.reader(archivo) #creación de objeto encargado de leer el csv
@@ -23,7 +23,7 @@ def ocr(ruta_video):
 	tamagno = len(l) #longitud de las columnas, se utilizará para recorrer las columnas completas
 
 	for x in range(1,tamagno): #comienza desde la primera para no tomar en cuenta la cabecera
-		l1.append((l[x][0])) #recorre las filas con x especificando solo una columna, añadiendo estos datos a las listas creadas anteriormente
+		l1.append((l[x][0])) #recorre las filas especificando solo una columna a la vez, para luego añadir estos datos a las listas creadas
 		l2.append((l[x][1]))
 		l3.append((l[x][2]))
 		l4.append((l[x][3]))
@@ -31,8 +31,8 @@ def ocr(ruta_video):
 		l6.append((l[x][5]))
 		l7.append((l[x][6]))
 	
-	#ELIMINAR DATOS VACÍOS EN LISTA
-	l_proveedores = list(filter(bool, l1))
+	#ELIMINAR DATOS VACÍOS EN LISTAS:
+	l_proveedores = list(filter(bool, l1)) #se crean nuevas listas sin datos vacíos
 	l_modelos = list(filter(bool, l2))
 	l_categorias = list(filter(bool, l3))
 	l_calidades = list(filter(bool, l4))
@@ -42,122 +42,121 @@ def ocr(ruta_video):
 
 	aux2, aux3, aux4, aux5, aux6, aux7, aux8, aux9 = ('', '', '', '', '', '', '', '') #variables auxiliar
 	
-	index = 0 #creamos un contador
+	index = 0 #contador para referenciar el número de frame de la ejecución
 
-	video = cv2.VideoCapture(ruta_video)
+	video = cv2.VideoCapture(ruta_video) #abre video
 
 	while (video.isOpened()): #mientras el video este abierto
-		ret, frame = video.read() #leemos el video mientras este abierto. Nos devuelve los valores ret y frame, ret=True si se lee la imagen, ret=False cuando no se lee. frame es la imagen en si misma
-		index += 1 #sumamos el contador para saber en que momento de la ejecucion nos encontramos
+		ret, frame = video.read() #leer video, ret= True o False. frame=imagen en si misma
+		index += 1 #incrementa contador para hacer referencia al número de frame
 
 		if not ret: #si ret es false
 			print('no hay imagen, terminando programa... \n')
 			break #se detiene la ejecucion en caso de no recibir mas imagen
 		
-		if (index % 20 == 0): #con esta condicion aceleramos el programa, ya que solo tomara en cuenta los frames que cumplan esta condicion
+		if (index % 20 == 0): #acelera la ejecución, ya que solo tomará en cuenta los frames que cumplan esta condición
 
-			print('analysis on process (', os.getpid(), ')' , index) #printiamos indicador e ID de proceso
+			print('analysis on process (', os.getpid(), ') -Frame -> ', index) #printea indicador de frame e ID de proceso
 
-			gris = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) #convertimos a escala de grises para poder convertir a imagen binaria
-			_,binary1 = cv2.threshold(gris, 80, 255, cv2.THRESH_BINARY) #binarizamos una imagen para extraer solamente el dato titulo
+			gris = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) #convierte a escala de grises para poder convertir a imagen binaria
+			_,binary1 = cv2.threshold(gris, 80, 255, cv2.THRESH_BINARY) #binariza una imagen únicamente para extraer el dato título
 			
-			#print(ret) #printiamos el valor booleano que nos indica si se esta leyendo la imagen o no
-			#print(index) #printiamos el valor referencial para saber en que parte de la ejecucion vamos
+			#print(ret) #printea valor booleano para saber si el video efectivamente se está leyendo
 
-			#cv2.imshow('video', frame) #mostramos los frames
-			#cv2.moveWindow('video', 0, 0) #movemos ventana
+			#cv2.imshow('video', frame) #muestra los frames, es decir, la imagen
+			#cv2.moveWindow('video', 0, 0) #desplaza ventana hacia la esquina
 			
-			if (index == 40): #analizamos el frame 40
+			if (index == 40): #analiza el frame 40
 				
-				for z in range(1, 256): #recorremos cada una de las umbralizaciones utilizando la imagen binary2
+				for z in range(1, 256): #recorre cada una de las umbralizaciones utilizando la imagen binary2
 
-					_,binary2 = cv2.threshold(gris, z, 255, cv2.THRESH_BINARY) #creamos una binarización dinámica
+					_,binary2 = cv2.threshold(gris, z, 255, cv2.THRESH_BINARY) #crea una binarización dinámica
 
-					#MODELO DE NEGOCIO:
+					#EXTRACCIÓN MODELO DE NEGOCIO:
 					x3, y3, h3, w3 = 150, 155, 23, 600
-					ROI3 = binary2[y3:y3+h3, x3:x3+w3] #hacemos uso de binary2
+					ROI3 = binary2[y3:y3+h3, x3:x3+w3] #hace uso de binary2
 					#cv2.imshow('roi3', ROI3)
 					#cv2.moveWindow('roi3',600,600)
-					aux3 = pytesseract.image_to_string(ROI3).strip() #extraemos el dato modelo de negocio
-					if (len(aux3) < 4):
+					aux3 = pytesseract.image_to_string(ROI3).strip() #extrae el dato modelo de negocio
+					if (len(aux3) < 4): #si se cumpĺe esta condición se asignará un distractor a la variable de extracción, con el fin de evitar una comparación ambigua con la fuente, provocando que diversos valores sean válidos
 						aux3 = '@@@'
 					#print('modelo de negocio: ', aux3)
 
 					#BÚSQUEDA DE DATOS:
 					#modelo de negocio:
 					for dato1 in l_modelos: #recorre la fuente de información
-						if (aux3 == dato1):
+						if (aux3 == dato1): #¿la extracción es igual a algún dato de la fuente?
 							modelo = dato1
 							break
-						elif (aux3 in dato1):
+						elif (aux3 in dato1): #¿el dato está en la fuente? 
 							modelo = dato1
-						elif (dato1 in aux3):
+						elif (dato1 in aux3): #¿la fuente está en el dato?
 							modelo = dato1
 
-			if (index == 160): #analizamos el frame 160
+			if (index == 160): #analiza el frame 160
 				
-				#TITULO: (el titulo debe estar fuera del recorrido de umbralizaciones, ya que debe ser un dato exacto, debido a que que no tenemos una fuente de conocimiento para comparar los datos)
+				#EXTRACCIÓN TITULO: (el titulo debe estar fuera del recorrido de umbralizaciones, ya que es un dato exacto. No existe una fuente de información con todos los títulos posibles
 				x1, y1, h1, w1 = 110, 110, 68, 310 #coordenadas
-				ROI1 = binary1[y1:y1+h1, x1:x1+w1] #parte de eje Y + el alto(hacia abajo), sigue el eje X más el ancho (hacia la derecha). Hacemos uso de binary1
-				#cv2.imshow('roi1', ROI1) #mostramos el recorte seleccionado
+				ROI1 = binary1[y1:y1+h1, x1:x1+w1] #parte de eje Y + el alto(hacia abajo), sigue el eje X más el ancho (hacia la derecha). Hace uso de binary1
+				#cv2.imshow('roi1', ROI1) #despliega el recorte seleccionado
 				#cv2.moveWindow('roi1',200,200)
-				titulo = pytesseract.image_to_string(ROI1, lang='spa').strip() #extraemos el dato titulo, especificamos lenguaje espagnol para que detecte las tildes
+				titulo = pytesseract.image_to_string(ROI1, lang='spa').strip() #extrae el dato titulo, especificación en lenguaje español para que detecte las tildes
 				#print(titulo)
 				
-				for x in range(1, 256): #recorremos cada uno de los umbrales utilizando la imagen binary3
+				for x in range(1, 256): #recorre cada uno de los umbrales utilizando la imagen binary3
 
-					_,binary3 = cv2.threshold(gris, x, 255, cv2.THRESH_BINARY) #binarizamos una imagen para extraer proveedor, categoria, calidad y agno
+					_,binary3 = cv2.threshold(gris, x, 255, cv2.THRESH_BINARY) #binariza una imagen para extraer los datos proveedor, categoria, calidad y agno
 
-					#PROVEEDOR:
+					#EXTRACCIÓN PROVEEDOR:
 					x2, y2, h2, w2 = 967, 135, 31, 60
-					ROI2 = binary3[y2:y2+h2, x2:x2+w2] #hacemos uso de binary3
+					ROI2 = binary3[y2:y2+h2, x2:x2+w2] #hace uso de binary3
 					#cv2.imshow('roi2', ROI2)
 					#cv2.moveWindow('roi2',600,600)
-					aux2 = pytesseract.image_to_string(ROI2).strip() #extraemos el dato proveedor
+					aux2 = pytesseract.image_to_string(ROI2).strip() #extrae el dato proveedor
 					if (len(aux2) < 3): #define esta condición para que no tome en cuenta cadenas muy pequeñas y provoque una confusión en la búsqueda de datos
 						aux2 = '@@@'
 					#print('proveedor: ', aux2)
 					
 					#SEPARACIÓN DE DATOS:
 					var = ''.join(aux2) #genera un string en base a la lista que extrae la herramienta
-					separacion_p = aux2.split() #generamos otra lista con elementos separados, esos elementos se compararán con la fuente
+					separacion_p = aux2.split() #generamos otra lista con los elementos separados del string. Esos elementos se compararán con la fuente
 					#print('proveedor: ', separacion_p)
 
-					#CATEGORIA:
+					#EXTRACCIÓN CATEGORIA:
 					x4, y4, h4, w4 = 150, 177, 20, 113
 					ROI4 = binary3[y4:y4+h4, x4:x4+w4]
 					#cv2.imshow('roi4', ROI4)
 					#cv2.moveWindow('roi4',400,400)
-					aux4 = pytesseract.image_to_string(ROI4).strip() #extraemos el dato categoria
-					if (len(aux4)  < 3):
+					aux4 = pytesseract.image_to_string(ROI4).strip() #extrae el dato categoria
+					if (len(aux4)  < 3): #define esta condición para que no tome en cuenta cadenas muy pequeñas y provoque una confusión en la búsqueda de datos
 						aux4 = '@@@'
 					#print('categoria: ', aux4)
 
-					#CALIDAD:
+					#EXTRACCIÓN CALIDAD:
 					x5, y5, h5, w5 = 145, 203, 28, 34
 					ROI5 = binary3[y5:y5+h5, x5:x5+w5] 
 					#cv2.imshow('roi5', ROI5)
 					#cv2.moveWindow('roi5',400,400)
-					aux5 = pytesseract.image_to_string(ROI5).strip() #extraemos el dato calidad
-					if (aux5 == ''):
+					aux5 = pytesseract.image_to_string(ROI5).strip() #extrae el dato calidad
+					if (aux5 == ''): #si se cumple, se asigna distracción para que no genere elementos vacíos
 						aux5 = '@@@'
 					#print('calidad: ', aux5)
 
-					#AGNO:
+					#EXTRACCIÓN AGNO:
 					x6, y6, h6, w6 = 305, 205, 22, 41
 					ROI6 = binary3[y6:y6+h6, x6:x6+w6] 
 					#cv2.imshow('roi6', ROI6)
 					#cv2.moveWindow('roi6',600,600)
-					aux6 = pytesseract.image_to_string(ROI6).strip() #extraemos el dato agno
-					if (len(aux6) < 4):
+					aux6 = pytesseract.image_to_string(ROI6).strip() #extrae el dato agno
+					if (len(aux6) < 4): #condición para que solo considere años que tengan cuatro dígitos de longitud
 						aux6 = '@@@'
 					#print('agno: ', aux6)
 
 					#BÚSQUEDA DE DATOS:
 					#proveedores:
-					for dato2 in l_proveedores: #recorre la fuente de información
+					for dato2 in l_proveedores: #recorre la fuente de información (lista con la columna proveedores)
 						for p in separacion_p:
-							if (len(p) > 4 and p == dato2): #se añade condición > 4 para que no considere datos pequeños
+							if (len(p) > 4 and p == dato2): #se añade condición > 4 para que no considere datos pequeños. Para cada uno de los strings de la lista creada en "SEPARACIÓN DE DATOS"
 								proveedor = dato2
 								#print(True, 'condicion 1: dato valido -> ', p)
 								break
@@ -170,9 +169,9 @@ def ocr(ruta_video):
 					
 
 					#categorias:
-					for dato3 in l_categorias:
+					for dato3 in l_categorias: #recorre la fuente de información (lista con la columna categorías)
 						if (aux4 == dato3):
-							categoria = dato3.title()
+							categoria = dato3.title() #title() provoca que la primera letra sea mayúscula y las demás minúsculas
 							break
 						elif (aux4 in dato3):
 							categoria = dato3.title()
@@ -204,7 +203,7 @@ def ocr(ruta_video):
 			break #si se presiona la letra S se detendra el programa
 
 
-	#ESCRITURA EN DOCUMENTO EXCEL
+	#ESCRITURA EN DOCUMENTO EXCEL:
 	extraccion = {'TÍTULO':[titulo], 'PROVEEDOR':[proveedor], 'MODELO DE NEGOCIO':[modelo], 'CATEGORÍA':[categoria], 'CALIDAD':[calidad], 'AGNO':[agno], 'PRECIO':[aux9]} #creación de diccionario con los datos extraídos
 	df_extraccion = pd.DataFrame(extraccion) #creación de dataframe con el diccionario de extracción
 
@@ -217,7 +216,7 @@ def ocr(ruta_video):
 
 	writer = pd.ExcelWriter('data.xlsx', engine='xlsxwriter') #objeto de escritura para documentos excel
 
-	for hoja in dfs.keys(): #recorremos las keys del diccionario de dfs
+	for hoja in dfs.keys(): #recorre las keys del diccionario de dfs
 		dfs[hoja].to_excel(writer, sheet_name=hoja, index=False) #sobreescribe df y el nombre correspondiente de la hoja
 
 	workbook = writer.book #creación de objeto
@@ -229,8 +228,9 @@ def ocr(ruta_video):
 	worksheet2.set_column('A:L', 20, formato)
 	writer.save() #guarda
 
+	#CÁLCULO TIEMPO FINAL:
 	tiempo_final = (time.time()) #asignamos tiempo final
-	print('\ntiempo de ejecución premium: ', ("{0:.2f}".format(tiempo_final - tiempo_inicial)), 'seg.') #calculamos y printiamos el tiempo total de ejecucion
+	print('\ntiempo de ejecución premium: ', ("{0:.2f}".format(tiempo_final - tiempo_inicial)), 'seg.') #calcula y printea el tiempo total de ejecucion
 
 	video.release()#cierre de video
 	cv2.destroyAllWindows() #cierre de todas las ventanas OpenCV que hayan podido quedar abiertas
