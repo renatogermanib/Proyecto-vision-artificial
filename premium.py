@@ -3,10 +3,13 @@ import pytesseract
 import csv
 import os
 import time
+import pandas as pd
+import xlsxwriter
+from openpyxl import Workbook
 
 def ocr(ruta_video):
 
-	#tiempo_inicial = time.time()
+	tiempo_inicial = time.time()
 
 	l = [] #genera lista vacía
 
@@ -76,9 +79,9 @@ def ocr(ruta_video):
 					#cv2.imshow('roi3', ROI3)
 					#cv2.moveWindow('roi3',600,600)
 					aux3 = pytesseract.image_to_string(ROI3).strip() #extraemos el dato modelo de negocio
-					if (aux3 == ''):
+					if (len(aux3) < 4):
 						aux3 = '@@@'
-					print('modelo de negocio: ', aux3)
+					#print('modelo de negocio: ', aux3)
 
 					#BÚSQUEDA DE DATOS:
 					#modelo de negocio:
@@ -100,15 +103,6 @@ def ocr(ruta_video):
 				#cv2.moveWindow('roi1',200,200)
 				titulo = pytesseract.image_to_string(ROI1, lang='spa').strip() #extraemos el dato titulo, especificamos lenguaje espagnol para que detecte las tildes
 				#print(titulo)
-
-				'''
-				x2, y2, h2, w2 = 145, 203, 28, 34
-				ROI2 = binary1[y2:y2+h2, x2:x2+w2] #hacemos uso de binary2
-				cv2.imshow('roi2', ROI2)
-				cv2.moveWindow('roi2',600,600)
-				aux2 = pytesseract.image_to_string(ROI2, lang='spa').strip()
-				print(aux2)
-				'''
 				
 				for x in range(1, 256): #recorremos cada uno de los umbrales utilizando la imagen binary3
 
@@ -120,14 +114,14 @@ def ocr(ruta_video):
 					#cv2.imshow('roi2', ROI2)
 					#cv2.moveWindow('roi2',600,600)
 					aux2 = pytesseract.image_to_string(ROI2).strip() #extraemos el dato proveedor
-					if (len(aux2) < 4):
+					if (len(aux2) < 3): #define esta condición para que no tome en cuenta cadenas muy pequeñas y provoque una confusión en la búsqueda de datos
 						aux2 = '@@@'
 					#print('proveedor: ', aux2)
 					
 					#SEPARACIÓN DE DATOS:
 					var = ''.join(aux2) #genera un string en base a la lista que extrae la herramienta
-					separacion_p = var.split() #generamos otra lista con elementos separados, esos elementos se compararán con la fuente
-					
+					separacion_p = aux2.split() #generamos otra lista con elementos separados, esos elementos se compararán con la fuente
+					#print('proveedor: ', separacion_p)
 
 					#CATEGORIA:
 					x4, y4, h4, w4 = 150, 177, 20, 113
@@ -135,7 +129,7 @@ def ocr(ruta_video):
 					#cv2.imshow('roi4', ROI4)
 					#cv2.moveWindow('roi4',400,400)
 					aux4 = pytesseract.image_to_string(ROI4).strip() #extraemos el dato categoria
-					if (aux4 == ''):
+					if (len(aux4)  < 3):
 						aux4 = '@@@'
 					#print('categoria: ', aux4)
 
@@ -155,34 +149,35 @@ def ocr(ruta_video):
 					#cv2.imshow('roi6', ROI6)
 					#cv2.moveWindow('roi6',600,600)
 					aux6 = pytesseract.image_to_string(ROI6).strip() #extraemos el dato agno
-					if (aux6 == ''):
+					if (len(aux6) < 4):
 						aux6 = '@@@'
 					#print('agno: ', aux6)
 
 					#BÚSQUEDA DE DATOS:
 					#proveedores:
 					for dato2 in l_proveedores: #recorre la fuente de información
-						if (separacion_p[0] == dato2):
-							proveedor = dato2
-							print(True, 'condicion 1')
-							break
-						elif (separacion_p[0] in dato2):
-							proveedor = dato2
-							print(True, 'condicion 2')
-						elif (dato2 in separacion_p[0]):
-							proveedor = dato2
-							print(True, 'condicion 3')
+						for p in separacion_p:
+							if (len(p) > 4 and p == dato2): #se añade condición > 4 para que no considere datos pequeños
+								proveedor = dato2
+								#print(True, 'condicion 1: dato valido -> ', p)
+								break
+							elif (len(p) > 4 and p in dato2):
+								proveedor = dato2
+								#print(True, 'condicion 2: dato valido -> ', p)
+							elif (len(p) > 4 and dato2 in p):
+								proveedor = dato2
+								#print(True, 'condicion 3: dato valido -> ', p)
 					
 
 					#categorias:
 					for dato3 in l_categorias:
 						if (aux4 == dato3):
-							categoria = dato3
+							categoria = dato3.title()
 							break
 						elif (aux4 in dato3):
-							categoria = dato3
+							categoria = dato3.title()
 						elif (dato3 in aux4):
-							categoria = dato3
+							categoria = dato3.title()
 
 					#calidades:
 					for dato4 in l_calidades:
@@ -207,22 +202,42 @@ def ocr(ruta_video):
 		if (cv2.waitKey(10) & 0xFF == ord('s')): #especificado en documentacion de opencv->necesario para procesadores de 64bits
 			print('se ha detenido la ejecucion')
 			break #si se presiona la letra S se detendra el programa
-	
-	with open('titulos.csv', mode='a', newline='') as Escritura_Datos:
-		writer = csv.writer(Escritura_Datos)
-		writer.writerow([titulo, proveedor, modelo, categoria, calidad, agno, aux9])
 
-	#tiempo_final = (time.time()) #asignamos tiempo final
-	#print('\ntiempo de ejecución premium: ', ("{0:.2f}".format(tiempo_final - tiempo_inicial)), 'seg.') #calculamos y printiamos el tiempo total de ejecucion
 
-	video.release()
-	cv2.destroyAllWindows()
+	#ESCRITURA EN DOCUMENTO EXCEL
+	extraccion = {'TÍTULO':[titulo], 'PROVEEDOR':[proveedor], 'MODELO DE NEGOCIO':[modelo], 'CATEGORÍA':[categoria], 'CALIDAD':[calidad], 'AGNO':[agno], 'PRECIO':[aux9]} #creación de diccionario con los datos extraídos
+	df_extraccion = pd.DataFrame(extraccion) #creación de dataframe con el diccionario de extracción
+
+	old_PyD = pd.read_excel('data.xlsx', sheet_name='peliculas o documentales') #lee la hoja de películas o documentales, retorna un df
+	old_Series = pd.read_excel('data.xlsx', sheet_name='series') #lee la planilla de series, retorna un df
+
+	new_PyD = old_PyD.append(df_extraccion, ignore_index=True) #genera un nuevo df, sumando el df de extracción a el viejo df
+
+	dfs = {'peliculas o documentales': new_PyD, 'series': old_Series} #diccionario de dfs, las keys son los nombres de las hojas
+
+	writer = pd.ExcelWriter('data.xlsx', engine='xlsxwriter') #objeto de escritura para documentos excel
+
+	for hoja in dfs.keys(): #recorremos las keys del diccionario de dfs
+		dfs[hoja].to_excel(writer, sheet_name=hoja, index=False) #sobreescribe df y el nombre correspondiente de la hoja
+
+	workbook = writer.book #creación de objeto
+	worksheet1 = writer.sheets['peliculas o documentales'] #para la primera hoja
+	worksheet2 = writer.sheets['series'] #para la segunda hoja
+	formato = workbook.add_format({'num_format': '@'}) #declaración de formato string mediante @
+
+	worksheet1.set_column('A:L', 20, formato) #establece formato -> columna A hasta la L, con un ancho de 20 por casilla
+	worksheet2.set_column('A:L', 20, formato)
+	writer.save() #guarda
+
+	tiempo_final = (time.time()) #asignamos tiempo final
+	print('\ntiempo de ejecución premium: ', ("{0:.2f}".format(tiempo_final - tiempo_inicial)), 'seg.') #calculamos y printiamos el tiempo total de ejecucion
+
+	video.release()#cierre de video
+	cv2.destroyAllWindows() #cierre de todas las ventanas OpenCV que hayan podido quedar abiertas
 
 if __name__ == '__main__':
 
-	ocr('/home/viruta/Desktop/Archivos/PROGRAMA/Premium/GuerrillaDelOro_Video.mp4')
-	'''
-	'/home/viruta/Desktop/Archivos/PROGRAMA/Premium/ThisIsUs_Video.mp4'
-	'/home/viruta/Desktop/Archivos/PROGRAMA/Premium/PlanetaHostil_Video.mp4'
-	'/home/viruta/Desktop/Archivos/PROGRAMA/Premium/GuerrillaDelOro_Video.mp4'
-	'''
+	ocr('/home/viruta/Desktop/Archivos/PROGRAMA/Premium/ThisIsUs_Video.mp4')
+	#ocr('/home/viruta/Desktop/Archivos/PROGRAMA/Premium/PlanetaHostil_Video.mp4')
+	#ocr('/home/viruta/Desktop/Archivos/PROGRAMA/Premium/GuerrillaDelOro_Video.mp4')
+	

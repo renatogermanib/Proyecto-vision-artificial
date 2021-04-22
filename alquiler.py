@@ -3,10 +3,13 @@ import pytesseract
 import csv
 import os
 import time
+import pandas as pd
+import xlsxwriter
+from openpyxl import Workbook
 
 def ocr(ruta_video):
 
-	#tiempo_inicial = time.time()
+	tiempo_inicial = time.time()
 	
 	l = [] #genera lista vacía
 
@@ -28,7 +31,7 @@ def ocr(ruta_video):
 		l6.append((l[x][5]))
 		l7.append((l[x][6]))
 	
-	#VACIAR DATOS VACÍOS EN LISTA
+	#ELIMINAR DATOS VACÍOS EN LISTA
 	l_proveedores = list(filter(bool, l1))
 	l_modelos = list(filter(bool, l2))
 	l_categorias = list(filter(bool, l3))
@@ -74,9 +77,9 @@ def ocr(ruta_video):
 					#cv2.imshow('roi3', ROI3)
 					#cv2.moveWindow('roi3',600,600)
 					aux3 = pytesseract.image_to_string(ROI3).strip() #extraemos el dato modelo de negocio
-					if (aux3 == ''):
+					if (len(aux3) < 4):
 						aux3 = '@@@'
-					print('modelo de negocio: ', aux3)
+					#print('modelo de negocio: ', aux3)
 					
 					#BÚSQUEDA DE DATOS:
 					#modelo de negocio:
@@ -120,9 +123,9 @@ def ocr(ruta_video):
 					#cv2.imshow('roi4', ROI4)
 					#cv2.moveWindow('roi4',400,400)
 					aux4 = pytesseract.image_to_string(ROI4, lang='spa').strip() #extraemos el dato categoria, especificamos espagnol para que detecte tildes
-					if (aux4 == ''):
-						aux4 = '@@@' #cuando la extracción sea un string vacío, se asignará este valor como "distracción", para que el string vacío no cumpla todas las condicinoes en la búsqueda de datos
-					print('categoria: ', aux4)
+					if (len(aux4) < 3):
+						aux4 = '@@@' #se agina este valor como "distracción", para que el string no cumpla otras condicinoes en la búsqueda de datos
+					#print('categoria: ', aux4)
 
 					#CALIDAD:
 					x5, y5, h5, w5 = 145, 203, 28, 34
@@ -132,7 +135,7 @@ def ocr(ruta_video):
 					aux5 = pytesseract.image_to_string(ROI5).strip() #extraemos el dato calidad
 					if (aux5 == ''):
 						aux5 = '@@@'
-					print('calidad: ', aux5)
+					#print('calidad: ', aux5)
 
 					#AGNO:
 					x6, y6, h6, w6 = 315, 205, 22, 55
@@ -140,20 +143,20 @@ def ocr(ruta_video):
 					#cv2.imshow('roi6', ROI6)
 					#cv2.moveWindow('roi6',600,600)
 					aux6 = pytesseract.image_to_string(ROI6).strip() #extraemos el dato agno
-					if (aux6 == ''):
+					if (len(aux6) < 4):
 						aux6 = '@@@'
-					print('agno: ', aux4)
+					#print('agno: ', aux4)
 
 					#BÚSQUEDA DE DATOS:
 					#categorias:
 					for dato2 in l_categorias: #recorre la fuente de información
 						if (aux4 == dato2):
-							categoria = dato2
+							categoria = dato2.title()
 							break
 						elif (aux4 in dato2):
-							categoria = dato2
+							categoria = dato2.title()
 						elif (dato2 in aux4):
-							categoria = dato2
+							categoria = dato2.title()
 							
 					#calidades:
 					for dato3 in l_calidades:
@@ -179,17 +182,41 @@ def ocr(ruta_video):
 		if (cv2.waitKey(10) & 0xFF == ord('s')): #especificado en documentacion de opencv->necesario para procesadores de 64bits
 			print('se ha detenido la ejecucion')
 			break #si se presiona la letra S se detendra el programa
-	
-	with open('titulos.csv', mode='a', newline='') as Escritura_Datos:
-		writer = csv.writer(Escritura_Datos)
-		writer.writerow([titulo, aux2, modelo, categoria.title(), calidad, agno, precio])
 
-	#tiempo_final = (time.time()) #asignamos tiempo final
-	#print('\ntiempo de ejecución alquiler: ', ("{0:.2f}".format(tiempo_final - tiempo_inicial)), 'seg.') #calculamos y printiamos el tiempo total de ejecucion
+
+	#ESCRITURA EN DOCUMENTO EXCEL
+	extraccion = {'TÍTULO':[titulo], 'PROVEEDOR':[aux2], 'MODELO DE NEGOCIO':[modelo], 'CATEGORÍA':[categoria], 'CALIDAD':[calidad], 'AGNO':[agno], 'PRECIO':[precio]} #creación de diccionario con los datos extraídos
+	df_extraccion = pd.DataFrame(extraccion) #creación de dataframe con el diccionario de extracción
+
+	old_PyD = pd.read_excel('data.xlsx', sheet_name='peliculas o documentales') #lee la hoja de películas o documentales, retorna un df
+	old_Series = pd.read_excel('data.xlsx', sheet_name='series') #lee la planilla de series, retorna un df
+
+	new_PyD = old_PyD.append(df_extraccion, ignore_index=True) #genera un nuevo df, sumando el df de extracción a el viejo df
+
+	dfs = {'peliculas o documentales': new_PyD, 'series': old_Series} #diccionario de dfs, las keys son los nombres de las hojas
+
+	writer = pd.ExcelWriter('data.xlsx', engine='xlsxwriter') #objeto de escritura para documentos excel
+
+	for hoja in dfs.keys(): #recorremos las keys del diccionario de dfs
+		dfs[hoja].to_excel(writer, sheet_name=hoja, index=False) #sobreescribe df y el nombre correspondiente de la hoja
+
+	workbook = writer.book #creación de objeto
+	worksheet1 = writer.sheets['peliculas o documentales'] #para la primera hoja
+	worksheet2 = writer.sheets['series'] #para la segunda hoja
+	formato = workbook.add_format({'num_format': '@'}) #declaración de formato string mediante @
+
+	worksheet1.set_column('A:L', 20, formato) #establece formato -> columna A hasta la L, con un ancho de 20 por casilla
+	worksheet2.set_column('A:L', 20, formato)
+	writer.save() #guarda
+
+	tiempo_final = (time.time()) #asignamos tiempo final
+	print('\ntiempo de ejecución alquiler: ', ("{0:.2f}".format(tiempo_final - tiempo_inicial)), 'seg.') #calculamos y printiamos el tiempo total de ejecucion
 
 	video.release()
 	cv2.destroyAllWindows()
 
 if __name__ == '__main__':
 
-	ocr('/home/viruta/Desktop/Archivos/PROGRAMA/Alquiler/ElCuboNegro_Video.mp4')
+	ocr('/home/viruta/Desktop/Archivos/PROGRAMA/Alquiler/Sumergidos_Video.mp4', )
+	#ocr('/home/viruta/Desktop/Archivos/PROGRAMA/Alquiler/UnLocoFuneral_Video.mp4', )
+	#ocr('/home/viruta/Desktop/Archivos/PROGRAMA/Alquiler/ElCuboNegro_Video.mp4', )

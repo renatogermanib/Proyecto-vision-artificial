@@ -7,7 +7,7 @@ import alquiler
 
 if __name__ == '__main__':
 
-	tiempo_inicial = time.time()
+	#tiempo_inicial = time.time()
  
 	#PROCESOS PARA PREMIUM:
 	#p1 = Process(target=premium.ocr, args=('/home/viruta/Desktop/Archivos/PROGRAMA/Premium/PlanetaHostil_Video.mp4', ))
@@ -20,7 +20,7 @@ if __name__ == '__main__':
 	#p6 = Process(target=series.ocr, args=('/home/viruta/Desktop/Archivos/PROGRAMA/Series/Chernobyl_Video.mp4', ))
 	
 	#PROCESOS PARA ALQUILER:
-	p7 = Process(target=alquiler.ocr, args=('/home/viruta/Desktop/Archivos/PROGRAMA/Alquiler/Sumergidos_Video.mp4', ))
+	#p7 = Process(target=alquiler.ocr, args=('/home/viruta/Desktop/Archivos/PROGRAMA/Alquiler/Sumergidos_Video.mp4', ))
 	#p8 = Process(target=alquiler.ocr, args=('/home/viruta/Desktop/Archivos/PROGRAMA/Alquiler/UnLocoFuneral_Video.mp4', ))
 	#p9 = Process(target=alquiler.ocr, args=('/home/viruta/Desktop/Archivos/PROGRAMA/Alquiler/ElCuboNegro_Video.mp4', ))
 
@@ -39,7 +39,7 @@ if __name__ == '__main__':
 	#p6.start()
 	#time.sleep(5)
 
-	p7.start()
+	#p7.start()
 	#time.sleep(9)
 	#p8.start()
 	#time.sleep(9)
@@ -54,10 +54,9 @@ if __name__ == '__main__':
 	#p5.join()
 	#p6.join()
 
-	p7.join()
+	#p7.join()
 	#p8.join()
 	#p9.join()
 
-
-	tiempo_final = time.time()
-	print('\ntiempo de ejecución: ', ("{0:.2f}".format(tiempo_final - tiempo_inicial)), 'seg.') #calculamos y printeamos el tiempo de ejecución total
+	#tiempo_final = time.time()
+	#print('\ntiempo de ejecución: ', ("{0:.2f}".format(tiempo_final - tiempo_inicial)), 'seg.') #calculamos y printeamos el tiempo de ejecución total

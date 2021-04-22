@@ -3,10 +3,13 @@ import pytesseract
 import csv
 import os
 import time
+import pandas as pd
+import xlsxwriter
+from openpyxl import Workbook
 
 def ocr(ruta_video):
 
-	#tiempo_inicial = time.time()
+	tiempo_inicial = time.time()
 
 	l = [] #genera lista vacía
 
@@ -83,7 +86,7 @@ def ocr(ruta_video):
 					#cv2.imshow('roi4', ROI4)
 					#cv2.moveWindow('roi4',400,400)
 					aux4 = pytesseract.image_to_string(ROI4, lang='spa').strip() #extraemos el dato categoria, especificamos espagnol para que detecte tildes
-					if (aux4 == ''):
+					if (len(aux4) < 3):
 						aux4 = '@@@'
 					#print('categoria: ', aux4)
 
@@ -103,7 +106,7 @@ def ocr(ruta_video):
 					#cv2.imshow('roi6', ROI6)
 					#cv2.moveWindow('roi6',600,600)
 					aux6 = pytesseract.image_to_string(ROI6).strip() #extraemos el dato agno
-					if (aux6 == ''):
+					if (len(aux6) < 4):
 						aux6 = '@@@'
 					#print('agno: ', aux4)
 
@@ -115,13 +118,13 @@ def ocr(ruta_video):
 					#categorias:
 					for dato1 in l_categorias: #recorre la fuente de información
 						if (aux4 == dato1):
-							categoria = dato1
+							categoria = dato1.title()
 							break
 						elif (aux4 in dato1):
-							categoria = dato1
+							categoria = dato1.title()
 							#print(categoria)
 						elif (dato1 in aux4):
-							categoria = dato1
+							categoria = dato1.title()
 							#print(categoria)
 
 					#calidades:
@@ -157,7 +160,7 @@ def ocr(ruta_video):
 					#cv2.imshow('roi7', ROI7)
 					#cv2.moveWindow('roi7',600,600)
 					aux7 = pytesseract.image_to_string(ROI7).strip() #extraemos el dato temporadas
-					if (aux7 == ''):
+					if (len(aux7) < 9):
 						aux7 = '@@@'
 					#print('temporadas: ', aux7)
 
@@ -169,7 +172,7 @@ def ocr(ruta_video):
 					aux8 = pytesseract.image_to_string(ROI8).strip() #extraemos el dato episodios
 					if (aux8 == ''):
 						aux8 = '@@@'
-					print('episodios: ', aux8)
+					#print('episodios: ', aux8)
 
 					#BÚSQUEDA DE DATOS:
 					#temporadas:
@@ -196,20 +199,41 @@ def ocr(ruta_video):
 			print('se ha detenido la ejecucion')
 			break #si se presiona la letra S se detendra el programa
 	
-	with open('series.csv', mode='a', newline='') as Escritura_Datos:
-		writer = csv.writer(Escritura_Datos)
-		writer.writerow([titulo, aux2, modelo, categoria.title(), calidad, agno, temporadas, episodios])
-	
-	#tiempo_final = (time.time()) #asignamos tiempo final
-	#print('\ntiempo de ejecución series: ', ("{0:.2f}".format(tiempo_final - tiempo_inicial)), 'seg.') #calculamos y printiamos el tiempo total de ejecucion
+
+	#ESCRITURA EN DOCUMENTO EXCEL
+	extraccion = {'TÍTULO':[titulo], 'PROVEEDOR':[aux2], 'MODELO DE NEGOCIO':[modelo], 'CATEGORÍA':[categoria], 'CALIDAD':[calidad], 'AGNO':[agno], 'TEMPORADAS':[temporadas], 'EPISODIOS':[episodios]} #creación de diccionario con los datos extraídos
+	df_extraccion = pd.DataFrame(extraccion) #creación de dataframe con el diccionario de extracción
+
+	old_PyD = pd.read_excel('data.xlsx', sheet_name='peliculas o documentales') #lee la hoja de películas o documentales, retorna un df
+	old_Series = pd.read_excel('data.xlsx', sheet_name='series') #lee la planilla de series, retorna un df
+
+	new_Series = old_Series.append(df_extraccion, ignore_index=True) #genera un nuevo df, sumando el df de extracción a el viejo df
+
+	dfs = {'peliculas o documentales': old_PyD, 'series': new_Series} #diccionario de dfs, las keys son los nombres de las hojas
+
+	writer = pd.ExcelWriter('data.xlsx', engine='xlsxwriter') #objeto de escritura para documentos excel
+
+	for hoja in dfs.keys(): #recorremos las keys del diccionario de dfs
+		dfs[hoja].to_excel(writer, sheet_name=hoja, index=False) #sobreescribe df y el nombre correspondiente de la hoja
+
+	workbook = writer.book #creación de objeto
+	worksheet1 = writer.sheets['peliculas o documentales'] #para la primera hoja
+	worksheet2 = writer.sheets['series'] #para la segunda hoja
+	formato = workbook.add_format({'num_format': '@'}) #declaración de formato string mediante @
+
+	worksheet1.set_column('A:L', 20, formato) #establece formato -> columna A hasta la L, con un ancho de 20 por casilla
+	worksheet2.set_column('A:L', 20, formato)
+	writer.save() #guarda
+
+	tiempo_final = (time.time()) #asignamos tiempo final
+	print('\ntiempo de ejecución series: ', ("{0:.2f}".format(tiempo_final - tiempo_inicial)), 'seg.') #calculamos y printiamos el tiempo total de ejecucion
 
 	video.release()
 	cv2.destroyAllWindows()
 
 if __name__ == '__main__':
 
-
-	#ocr('/home/viruta/Desktop/Archivos/PROGRAMA/Series/MyBrilliantFriend_Video.mp4')
+	ocr('/home/viruta/Desktop/Archivos/PROGRAMA/Series/MyBrilliantFriend_Video.mp4')
 	#ocr('/home/viruta/Desktop/Archivos/PROGRAMA/Series/TheOutsider_Video.mp4')
-	ocr('/home/viruta/Desktop/Archivos/PROGRAMA/Series/Chernobyl_Video.mp4')
+	#ocr('/home/viruta/Desktop/Archivos/PROGRAMA/Series/Chernobyl_Video.mp4')
 	
