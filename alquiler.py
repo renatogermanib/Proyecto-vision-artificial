@@ -50,6 +50,8 @@ def ocr(ruta_video):
 		ret, frame = video.read() #leer video, ret= True o False. frame=imagen en si misma
 		index += 1 #incrementa contador para hacer referencia al número de frame
 
+		imGui = video.read()[1]
+
 		if not ret: #si ret es False
 			print('no hay imagen, terminando programa...')
 			break #se detiene la ejecucion en caso de no recibir más imagen
@@ -218,6 +220,7 @@ def ocr(ruta_video):
 
 if __name__ == '__main__':
 
-	ocr('/home/viruta/Desktop/Archivos/PROGRAMA/Alquiler/Sumergidos_Video.mp4', )
+	None #variable nula para evitar unexpected EOF
+	#ocr('/home/viruta/Desktop/Archivos/PROGRAMA/Alquiler/Sumergidos_Video.mp4', )
 	#ocr('/home/viruta/Desktop/Archivos/PROGRAMA/Alquiler/UnLocoFuneral_Video.mp4', )
 	#ocr('/home/viruta/Desktop/Archivos/PROGRAMA/Alquiler/ElCuboNegro_Video.mp4', )

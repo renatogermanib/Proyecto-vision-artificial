@@ -7,7 +7,7 @@ import pandas as pd
 import xlsxwriter
 from openpyxl import Workbook
 
-def ocr(ruta_video):
+def ocr1(ruta_video, conexion): #ruta y pipe1
 
 	tiempo_inicial = time.time()
 
@@ -50,11 +50,18 @@ def ocr(ruta_video):
 		ret, frame = video.read() #leer video, ret= True o False. frame=imagen en si misma
 		index += 1 #incrementa contador para hacer referencia al número de frame
 
-		if not ret: #si ret es false
-			print('no hay imagen, terminando programa... \n')
-			break #se detiene la ejecucion en caso de no recibir mas imagen
-		
 		if (index % 20 == 0): #acelera la ejecución, ya que solo tomará en cuenta los frames que cumplan esta condición
+		
+			im = video.read()[1] #lectura de imagen con [1] para su uso con tkinter
+			conexion.send(im) #traspaso de arrays por tubería
+
+			if (im is None): #si el arreglo contiene valor nulo
+				conexion.close() #cierre de pipe emisor
+				print('traspaso de imágenes a GUI finalizado')
+
+			if not ret: #si ret es false
+				print('no hay imagen, terminando programa... \n')
+				break #se detiene la ejecucion en caso de no recibir mas imagen
 
 			print('analysis on process (', os.getpid(), ') -Frame -> ', index) #printea indicador de frame e ID de proceso
 
@@ -202,7 +209,7 @@ def ocr(ruta_video):
 			print('se ha detenido la ejecucion')
 			break #si se presiona la letra S se detendra el programa
 
-
+	'''
 	#ESCRITURA EN DOCUMENTO EXCEL:
 	extraccion = {'TÍTULO':[titulo], 'PROVEEDOR':[proveedor], 'MODELO DE NEGOCIO':[modelo], 'CATEGORÍA':[categoria], 'CALIDAD':[calidad], 'AGNO':[agno], 'PRECIO':[aux9]} #creación de diccionario con los datos extraídos
 	df_extraccion = pd.DataFrame(extraccion) #creación de dataframe con el diccionario de extracción
@@ -227,6 +234,8 @@ def ocr(ruta_video):
 	worksheet1.set_column('A:L', 20, formato) #establece formato -> columna A hasta la L, con un ancho de 20 por casilla
 	worksheet2.set_column('A:L', 20, formato)
 	writer.save() #guarda
+	'''
+	print(titulo, proveedor, modelo, categoria, calidad, agno, aux9)
 
 	#CÁLCULO TIEMPO FINAL:
 	tiempo_final = (time.time()) #asignamos tiempo final
@@ -237,7 +246,8 @@ def ocr(ruta_video):
 
 if __name__ == '__main__':
 
-	ocr('/home/viruta/Desktop/Archivos/PROGRAMA/Premium/ThisIsUs_Video.mp4')
+	None #variable nula para evitar unexpected EOF 
+	#ocr('/home/viruta/Desktop/Archivos/PROGRAMA/Premium/ThisIsUs_Video.mp4')
 	#ocr('/home/viruta/Desktop/Archivos/PROGRAMA/Premium/PlanetaHostil_Video.mp4')
 	#ocr('/home/viruta/Desktop/Archivos/PROGRAMA/Premium/GuerrillaDelOro_Video.mp4')
 	

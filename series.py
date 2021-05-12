@@ -31,7 +31,7 @@ def ocr(ruta_video):
 		l6.append((l[x][5]))
 		l7.append((l[x][6]))
 	
-	#ELIMINAR DATOS VACÍOS EN LISTA:
+	#ELIMINAR DATOS VACÍOS EN LISTAS:
 	l_proveedores = list(filter(bool, l1)) #se crean nuevas listas sin datos vacíos
 	l_modelos = list(filter(bool, l2))
 	l_categorias = list(filter(bool, l3))
@@ -235,7 +235,8 @@ def ocr(ruta_video):
 
 if __name__ == '__main__':
 
-	ocr('/home/viruta/Desktop/Archivos/PROGRAMA/Series/MyBrilliantFriend_Video.mp4')
+	None #variable nula para evitar unexpected EOF
+	#ocr('/home/viruta/Desktop/Archivos/PROGRAMA/Series/MyBrilliantFriend_Video.mp4')
 	#ocr('/home/viruta/Desktop/Archivos/PROGRAMA/Series/TheOutsider_Video.mp4')
 	#ocr('/home/viruta/Desktop/Archivos/PROGRAMA/Series/Chernobyl_Video.mp4')
 	
