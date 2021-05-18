@@ -235,7 +235,7 @@ def ocr1(ruta_video, conexion): #ruta y pipe1
 	worksheet2.set_column('A:L', 20, formato)
 	writer.save() #guarda
 	'''
-	print(titulo, proveedor, modelo, categoria, calidad, agno, aux9)
+	print(titulo, proveedor, modelo, categoria, calidad, agno, aux9) #printeo temporal para evitar la escritura constante en excel
 
 	#CÁLCULO TIEMPO FINAL:
 	tiempo_final = (time.time()) #asignamos tiempo final

@@ -7,7 +7,7 @@ import pandas as pd
 import xlsxwriter
 from openpyxl import Workbook
 
-def ocr(ruta_video):
+def ocr3(ruta_video, conexion):
 
 	tiempo_inicial = time.time()
 	
@@ -50,14 +50,19 @@ def ocr(ruta_video):
 		ret, frame = video.read() #leer video, ret= True o False. frame=imagen en si misma
 		index += 1 #incrementa contador para hacer referencia al número de frame
 
-		imGui = video.read()[1]
-
-		if not ret: #si ret es False
-			print('no hay imagen, terminando programa...')
-			break #se detiene la ejecucion en caso de no recibir más imagen
-
 		if (index % 20 == 0): #analiza los frames que unicamente cumplan esta condicion
-			
+		
+			im = video.read()[1]
+			conexion.send(im)
+
+			if (im is None):
+				conexion.close()
+				print('traspaso de imágenes a GUI finalizado')
+
+			if not ret: #si ret es False
+				print('no hay imagen, terminando programa...')
+				break #se detiene la ejecucion en caso de no recibir más imagen
+
 			print('analysis on process (', os.getpid(), ') -Frame -> ', index) #printiamos indicador e ID de proceso
 
 			#print(index)
@@ -185,7 +190,7 @@ def ocr(ruta_video):
 			print('se ha detenido la ejecucion')
 			break #si se presiona la letra S se detendra el programa
 
-
+	'''
 	#ESCRITURA EN DOCUMENTO EXCEL:
 	extraccion = {'TÍTULO':[titulo], 'PROVEEDOR':[aux2], 'MODELO DE NEGOCIO':[modelo], 'CATEGORÍA':[categoria], 'CALIDAD':[calidad], 'AGNO':[agno], 'PRECIO':[precio]} #creación de diccionario con los datos extraídos
 	df_extraccion = pd.DataFrame(extraccion) #creación de dataframe con el diccionario de extracción
@@ -210,6 +215,8 @@ def ocr(ruta_video):
 	worksheet1.set_column('A:L', 20, formato) #establece formato -> columna A hasta la L, con un ancho de 20 por casilla
 	worksheet2.set_column('A:L', 20, formato)
 	writer.save() #guarda
+	'''
+	print(titulo, aux2, modelo, categoria, calidad, agno, precio) #printeo temporal para evitar la escritura constante en excel
 
 	#CÁLCULO TIEMPO FINAL:
 	tiempo_final = (time.time()) #asignamos tiempo final

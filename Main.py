@@ -9,55 +9,68 @@ from PIL import ImageTk
 import cv2
 import imutils
 import os
-#FUNCIONES:
+#MÓDULOS Y SUS FUNCIONES:
 from premium import ocr1
-#from series import ocr2
-#from alquiler import ocr3
+from series import ocr2
+from alquiler import ocr3
 
+#FUNCIONES:
 def ingresar_premium():
-	print('proceso ingreso premium -> ', os.getpid()) #printeo para la identificación del proceso actual
-	global pipe1, pipe1 #declaración cglobal para la utilización de variables declaradas en el Main
+	print('proceso ingreso premium -> (', os.getpid(), ')') #printeo identificación de proceso actual
+	global pipe1, pipe1 #declaración global para la utilización de variables declaradas en el Main
 	global labelInfo2
 	ruta_video = filedialog.askopenfilename(initialdir='/home/viruta/Desktop/Archivos/PROGRAMA/Premium', filetypes=[("all video format", '.mp4')])
-	if len(ruta_video) > 0: #si el objeto de askopenfilename tiene un nombre y una ruta, es decir, si escogimos un archivo
-		p1 = multiprocessing.Process(target=ocr1, args=(ruta_video, pipe1))
+	if len(ruta_video) > 0: #si el objeto de askopenfilename tiene un nombre y una ruta, es decir, si se escoge un archivo
+		p1 = multiprocessing.Process(target=ocr1, args=(ruta_video, pipe1)) #creación de proceso para el análisis premium
 		p1.start()
-		visualizar(pipe2)
+		visualizar(pipe2) #llamada a la función visualizar, envío de pipe receptor
 	else:
 		labelInfo2.configure(text='se ha cancelado la selección') #en caso de haber cancelado la elección de video
 
 def ingresar_series():
+	print('proceso ingreso series -> (', os.getpid(), ')')
+	global pipe1, pipe2
+	global labelInfo2
 	ruta_video = filedialog.askopenfilename(initialdir='/home/viruta/Desktop/Archivos/PROGRAMA/Series', filetypes=[('all video format','.mp4')])
 	if len(ruta_video) > 0:
-		series.ocr(ruta_video)
+		p2 = multiprocessing.Process(target=ocr2, args=(ruta_video, pipe1)) #creación de proceso para el análisis series
+		p2.start()
+		visualizar(pipe2) #llamada a la función visualizar, envío de pipe receptor
 	else:
 		labelInfo2.configure(text='se ha cancelado la selección')
 
 def ingresar_alquiler():
+	print('proceso ingreso alquiler -> (', os.getpid(), ')')
+	global pipe1, pipe2
+	global labelInfo2
 	ruta_video = filedialog.askopenfilename(initialdir='/home/viruta/Desktop/Archivos/PROGRAMA/Alquiler', filetypes=[('all video format','.mp4')])
 	if len(ruta_video) > 0:
-		alquiler.ocr(ruta_video)
+		p3 = multiprocessing.Process(target=ocr3, args=(ruta_video, pipe1)) #creación de proceso para el análisis alquiler
+		p3.start()
+		visualizar(pipe2) #llamada a la función visualizar, envío de pipe receptor
 	else:
 		labelInfo2.configure(text='se ha cancelado la selección')
 
-def visualizar(conexion):
-	print('proceso visualizar -> ', os.getpid())
-	global labelVideo #declaración global para la utilización de variables declaradas en el Main
+def visualizar(conexion): #toma como parámetro el pipe receptor
+	print('proceso visualizar -> (', os.getpid(), ')')
+	global labelVideo #declaración global para la utilización de la variable declarada en el Main
 	global root
 	while (True): #loop infinito
-		im = conexion.recv()
+		im = conexion.recv() #creación de variable con los datos recibidos por el pipe
 		if (im is None):
-			root.update()
+			root.update() #ejecución de un último update antes del break, con el propósito de eliminar el último frame de reproducción
 			break
 		else:
-			im = imutils.resize(im, width=720) #redimensionamiento de imagen
+			im = imutils.resize(im, width=1100) #redimensionamiento de imagen
 			im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB) #converción de bgr a rgb, opencv lee en bgr y PIL muestra el rgb
 			im = Image.fromarray(im) #conversión de imagen rgb a arreglo
 			im = ImageTk.PhotoImage(im) #conversión de arreglo a un objeto de imagen PIL
-			labelVideo['image'] = im #asignación de video al label
-			root.update()
+			labelVideo['image'] = im #asignación de imágenes al label de video
+			labelVideo.pack() #método pack, se ejecuta dentro de la función con el propósito de que el frame se visualice en el tamaño definido en el Main
+			root.update() #actualización de ventana principal
 
 if __name__ == '__main__':
+	print('proceso Main -> (', os.getpid(), ')')
 	pipe1, pipe2 = multiprocessing.Pipe() #pipe1: emisor - pipe2: receptor
 
 	root = Tk() #creación de ventana principal
@@ -69,39 +82,25 @@ if __name__ == '__main__':
 	fuenteTitulos = font.Font(family='Ubuntu Condensed', size=40, weight='bold')
 	fuentePrincipal = font.Font(family='Ubuntu Condensed', size=40)
 
-	#LABELS:
-	labelInfo1 = Label(root, text='Análisis -')
-	labelInfo1.grid(column=0, row=1, padx=5, pady=5)
-	labelInfo1['font'] = fuenteTitulos
+	borde = Frame(root, bg='lightblue', bd=10) #creación de frame contenedor, su objetivo es generar un efecto de borde en el label
+	borde.place(relx=0.04, rely=0.05) #utilización de posicionamiento relativo (posicionamiento dinámico)
 
-	labelInfo2 = Label(root, text='aún no se ha ingresado material')
-	labelInfo2.grid(column=1, row=1, padx=5, pady=5)
-	labelInfo2['font'] = fuentePrincipal
+	ContenedorVideo = Frame(borde, bg='gray', width=1100, height=618) #ancho y alto correspondiente al tamaño asignado por imutils.resize
+	ContenedorVideo.pack()
 
-	labelInfo3 = Label(root, text='VIDEO')
-	labelInfo3.grid(column=1, row=2)
+	labelVideo = Label(ContenedorVideo, bg='gray') #label donde se reproducirá el video, su método pack() se encuentra en la función visualizar, con el propósito de no distorcionar el tamaño asignado en el frame contenedor de video.
 
-	labelVideo = Label(root, bg='black') #label donde se reproducirá el video
-	labelVideo.grid(column=1, row=3)
-
-	#f1 = LabelFrame(root, bg='red')
-	#f1.pack()
-	#l1 = Label(f1, bg='yellow')
-	#l1.pack()
-
-	#BOTÓN PREMIUM:
+	#BOTONES:
 	btnVisualizarPremium = Button(root, text='Premium', width=10, command=ingresar_premium, bg='#0052cc', fg='#ffffff') #creación de botón, columnspan permite centrar el botón entre dos columnas, el número especifica la cantidad de columnas
-	btnVisualizarPremium.grid(column=10, row=10, padx=5, pady=5) #pad x e y especifica la separación que tendrá frente a los widgets
+	btnVisualizarPremium.place(relx=0.7, rely=0.1) #pad x e y especifica la separación que tendrá frente a los widgets
 	btnVisualizarPremium['font'] = fuentePrincipal
-
-	#BOTÓN SERIES:
+	
 	btnVisualizarSeries = Button(root, text='Series', width=10, command=ingresar_series, bg='#0052cc', fg='#ffffff')
-	btnVisualizarSeries.grid(column=10, row=20, padx=5, pady=5)
+	btnVisualizarSeries.place(relx=0.7, rely=0.24)
 	btnVisualizarSeries['font'] = fuentePrincipal
-
-	#BOTÓN ALQUILER:
+	
 	btnVisualizarAlquiler = Button(root, text='Alquiler', width=10, command=ingresar_alquiler, bg='#0052cc', fg='#ffffff')
-	btnVisualizarAlquiler.grid(column=10, row=30, padx=5, pady=5)
+	btnVisualizarAlquiler.place(relx=0.7, rely=0.38)
 	btnVisualizarAlquiler['font'] = fuentePrincipal
-
+	
 	root.mainloop() #loop que mantiene abierta la ventana durante la ejecución del aplicativo
