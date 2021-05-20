@@ -102,5 +102,16 @@ if __name__ == '__main__':
 	btnVisualizarAlquiler = Button(root, text='Alquiler', width=10, command=ingresar_alquiler, bg='#0052cc', fg='#ffffff')
 	btnVisualizarAlquiler.place(relx=0.7, rely=0.38)
 	btnVisualizarAlquiler['font'] = fuentePrincipal
+
+	#consola = Frame(root, bg='brown', width=600, height=200)
+	#consola.place(relx=0.1, rely=0.73)
+
+	#tfield = Text(root)
+	#tfield.place(relx=0.1, rely=0.73)
+	#for line in os.popen("run_command", 'r'):
+		#tfield.insert("end", line)
+
+	#wid = consola.winfo_id()
+	#os.system('xterm -into %d -geometry 100x20 -sb &' % wid)
 	
 	root.mainloop() #loop que mantiene abierta la ventana durante la ejecución del aplicativo
