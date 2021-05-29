@@ -16,19 +16,19 @@ from alquiler import ocr3
 
 #FUNCIONES:
 def ingresar_premium():
-	print('proceso ingreso premium -> (', os.getpid(), ')') #printeo identificación de proceso actual
-	global pipe1, pipe1 #declaración global para la utilización de variables declaradas en el Main
+	print('Ingreso premium -> Process (', os.getpid(), ')') #printeo identificación de proceso actual
+	global pipe1, pipe2, pipe3, pipe4 #declaración global para la utilización de variables declaradas en el Main
 	global labelInfo2
 	ruta_video = filedialog.askopenfilename(initialdir='/home/viruta/Desktop/Archivos/PROGRAMA/Premium', filetypes=[("all video format", '.mp4')])
 	if len(ruta_video) > 0: #si el objeto de askopenfilename tiene un nombre y una ruta, es decir, si se escoge un archivo
-		p1 = multiprocessing.Process(target=ocr1, args=(ruta_video, pipe1)) #creación de proceso para el análisis premium
+		p1 = multiprocessing.Process(target=ocr1, args=(ruta_video, pipe1, pipe3)) #creación de proceso para el análisis premium
 		p1.start()
 		visualizar(pipe2) #llamada a la función visualizar, envío de pipe receptor
 	else:
 		labelInfo2.configure(text='se ha cancelado la selección') #en caso de haber cancelado la elección de video
 
 def ingresar_series():
-	print('proceso ingreso series -> (', os.getpid(), ')')
+	print('Ingreso series -> Process (', os.getpid(), ')')
 	global pipe1, pipe2
 	global labelInfo2
 	ruta_video = filedialog.askopenfilename(initialdir='/home/viruta/Desktop/Archivos/PROGRAMA/Series', filetypes=[('all video format','.mp4')])
@@ -40,7 +40,7 @@ def ingresar_series():
 		labelInfo2.configure(text='se ha cancelado la selección')
 
 def ingresar_alquiler():
-	print('proceso ingreso alquiler -> (', os.getpid(), ')')
+	print('Ingreso alquiler -> Process (', os.getpid(), ')')
 	global pipe1, pipe2
 	global labelInfo2
 	ruta_video = filedialog.askopenfilename(initialdir='/home/viruta/Desktop/Archivos/PROGRAMA/Alquiler', filetypes=[('all video format','.mp4')])
@@ -52,9 +52,12 @@ def ingresar_alquiler():
 		labelInfo2.configure(text='se ha cancelado la selección')
 
 def visualizar(conexion): #toma como parámetro el pipe receptor
-	print('proceso visualizar -> (', os.getpid(), ')')
+	print('Visualización de análisis -> Process (', os.getpid(), ')')
 	global labelVideo #declaración global para la utilización de la variable declarada en el Main
 	global root
+	global pipe4
+	p4 = multiprocessing.Process(target=salidas, args=[pipe4, ]) #llamada a la función salidas, envío de pipe receptor
+	p4.start()
 	while (True): #loop infinito
 		im = conexion.recv() #creación de variable con los datos recibidos por el pipe
 		if (im is None):
@@ -69,9 +72,20 @@ def visualizar(conexion): #toma como parámetro el pipe receptor
 			labelVideo.pack() #método pack, se ejecuta dentro de la función con el propósito de que el frame se visualice en el tamaño definido en el Main
 			root.update() #actualización de ventana principal
 
+def salidas(conexion):
+	print('Captura de salidas -> Process', os.getpid())
+	while (True):
+		salida = conexion.recv()
+		if (salida is None):
+			print('output vacío')
+			break
+		else:
+			print(salida.strip(), '-in P-> ', os.getpid()) #printeo output proceso de análisis
+
 if __name__ == '__main__':
-	print('proceso Main -> (', os.getpid(), ')')
-	pipe1, pipe2 = multiprocessing.Pipe() #pipe1: emisor - pipe2: receptor
+	print('Main -> Process (', os.getpid(), ')')
+	pipe1, pipe2 = multiprocessing.Pipe() #pipe1: emisor - pipe2: receptor (imágenes de análisis)
+	pipe3, pipe4 = multiprocessing.Pipe() #pipe3: emisor - pipe4: receptor (stdout procesos de análisis)
 
 	root = Tk() #creación de ventana principal
 	root.title('ANÁLISIS VOD') #asignación de título a la ventana

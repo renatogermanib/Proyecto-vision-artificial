@@ -5,9 +5,13 @@ import os
 import time
 import pandas as pd
 import xlsxwriter
+import sys
+import io
 from openpyxl import Workbook
 
-def ocr1(ruta_video, conexion): #ruta y pipe1
+def ocr1(ruta_video, conexion1, conexion2): #ruta - pipe1 emisor de imágenes - pipe3 emisor de output
+
+	salida_std = sys.stdout #creación de objeto con salida standard principal (backup para su posterior recuperación)
 
 	tiempo_inicial = time.time()
 
@@ -49,21 +53,35 @@ def ocr1(ruta_video, conexion): #ruta y pipe1
 	while (video.isOpened()): #mientras el video este abierto
 		ret, frame = video.read() #leer video, ret= True o False. frame=imagen en si misma
 		index += 1 #incrementa contador para hacer referencia al número de frame
-
+		
 		if (index % 20 == 0): #acelera la ejecución, ya que solo tomará en cuenta los frames que cumplan esta condición
 		
 			im = video.read()[1] #lectura de imagen con [1] para su uso con tkinter
-			conexion.send(im) #traspaso de arrays por tubería
+			conexion1.send(im) #traspaso de arrays por tubería
+
+			sys.stdout = io.StringIO() #inicio captura de output
+			print('analysis on process (', os.getpid(), ') -Frame -> ', index) #printea indicador de frame e ID de proceso
+			out = sys.stdout.getvalue() #asignación variable con los datos output
+			conexion2.send(out) #envío de output hacia proceso Main
+			sys.stdout.close() #finalización de captura de output
 
 			if (im is None): #si el arreglo contiene valor nulo
-				conexion.close() #cierre de pipe emisor
+				sys.stdout = io.StringIO() #inicio captura de output
 				print('traspaso de imágenes a GUI finalizado')
+				out = sys.stdout.getvalue() #asignación variable con los datos output
+				conexion2.send(out) #último envío de output antes de la interrupción del ciclo
+				sys.stdout.close() #finalización de captura de output
+				conexion1.close() #cierre de pipe emisor de imagen
 
 			if not ret: #si ret es false
+				sys.stdout = io.StringIO() #inicio captura de output
 				print('no hay imagen, terminando programa... \n')
+				out = sys.stdout.getvalue() #asignación variable con los datos output
+				conexion2.send(out) #último envío de output antes de la interrupción del ciclo
+				conexion2.send(None)
+				sys.stdout.close() #cirre antes de envío
+				conexion2.close() #cierre de pipe emisor de output
 				break #se detiene la ejecucion en caso de no recibir mas imagen
-
-			print('analysis on process (', os.getpid(), ') -Frame -> ', index) #printea indicador de frame e ID de proceso
 
 			gris = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) #convierte a escala de grises para poder convertir a imagen binaria
 			_,binary1 = cv2.threshold(gris, 80, 255, cv2.THRESH_BINARY) #binariza una imagen únicamente para extraer el dato título
@@ -235,6 +253,8 @@ def ocr1(ruta_video, conexion): #ruta y pipe1
 	worksheet2.set_column('A:L', 20, formato)
 	writer.save() #guarda
 	'''
+	sys.stdout = salida_std #recuperación de salida standard principal
+
 	print(titulo, proveedor, modelo, categoria, calidad, agno, aux9) #printeo temporal para evitar la escritura constante en excel
 
 	#CÁLCULO TIEMPO FINAL:

@@ -6,6 +6,7 @@ import time
 import pandas as pd
 import xlsxwriter
 from openpyxl import Workbook
+import sys
 
 def ocr2(ruta_video, conexion):
 
