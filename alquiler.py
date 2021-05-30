@@ -5,10 +5,13 @@ import os
 import time
 import pandas as pd
 import xlsxwriter
-from openpyxl import Workbook
 import sys
+import io
+from openpyxl import Workbook
 
-def ocr3(ruta_video, conexion):
+def ocr3(ruta_video, conexion1, conexion2): #ruta - pipe1 emisor de imágenes - pipe3 emisor de output
+
+	salida_std = sys.stdout
 
 	tiempo_inicial = time.time()
 	
@@ -54,17 +57,31 @@ def ocr3(ruta_video, conexion):
 		if (index % 20 == 0): #analiza los frames que unicamente cumplan esta condicion
 		
 			im = video.read()[1]
-			conexion.send(im)
+			conexion1.send(im)
+
+			sys.stdout = io.StringIO() #inicio de captura de salidas
+			print('analysis on process (', os.getpid(), ') -Frame -> ', index) #printiamos indicador e ID de proceso
+			out = sys.stdout.getvalue() #asignación de salidas a una variable
+			conexion2.send(out)
+			sys.stdout.close()
 
 			if (im is None):
-				conexion.close()
+				conexion1.close()
+				sys.stdout = io.StringIO()
 				print('traspaso de imágenes a GUI finalizado')
+				out = sys.stdout.getvalue()
+				conexion2.send(out)
+				sys.stdout.close()
 
 			if not ret: #si ret es False
+				sys.stdout = io.StringIO()
 				print('no hay imagen, terminando programa...')
+				out = sys.stdout.getvalue()
+				conexion2.send(out)
+				conexion2.send(None)
+				sys.stdout.close()
+				conexion2.close()
 				break #se detiene la ejecucion en caso de no recibir más imagen
-
-			print('analysis on process (', os.getpid(), ') -Frame -> ', index) #printiamos indicador e ID de proceso
 
 			#print(index)
 
@@ -217,6 +234,9 @@ def ocr3(ruta_video, conexion):
 	worksheet2.set_column('A:L', 20, formato)
 	writer.save() #guarda
 	'''
+	
+	sys.stdout = salida_std #recuperación de standard output original
+
 	print(titulo, aux2, modelo, categoria, calidad, agno, precio) #printeo temporal para evitar la escritura constante en excel
 
 	#CÁLCULO TIEMPO FINAL:

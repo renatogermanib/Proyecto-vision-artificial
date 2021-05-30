@@ -5,10 +5,13 @@ import os
 import time
 import pandas as pd
 import xlsxwriter
-from openpyxl import Workbook
 import sys
+import io
+from openpyxl import Workbook
 
-def ocr2(ruta_video, conexion):
+def ocr2(ruta_video, conexion1, conexion2): #ruta - pipe1 emisor de imágenes - pipe3 emisor de output
+
+	salida_std = sys.stdout #backup de estándar output principal
 
 	tiempo_inicial = time.time()
 
@@ -54,18 +57,31 @@ def ocr2(ruta_video, conexion):
 		if (index % 20 == 0): #acelera la ejecución, ya que solo tomará en cuenta los frames que cumplan esta condición
 		
 			im = video.read()[1]
-			conexion.send(im)
+			conexion1.send(im)
+
+			sys.stdout = io.StringIO() #inicio captura de stdout
+			print('analysis on process (', os.getpid(), ') -Frame -> ', index) #printea indicador de frame e ID de proceso
+			out = sys.stdout.getvalue() #asignación de output a variable
+			conexion2.send(out) #envío de salidas a Main
+			sys.stdout.close() #cierre de stdout
 
 			if (im is None):
-				conexion.close()
+				conexion1.close()
+				sys.stdout = io.StringIO()
 				print('traspaso de imágenes a GUI finalizado')
+				out = sys.stdout.getvalue()
+				conexion2.send(out) #envío de salidas a Main
+				sys.stdout.close()
 
 			if not ret: #si ret es False
+				sys.stdout = io.StringIO()
 				print('no hay imagen, terminando programa...')
+				out = sys.stdout.getvalue()
+				conexion2.send(out)
+				conexion2.send(None)
+				sys.stdout.close()
+				conexion2.close()
 				break #se detiene la ejecución en caso de no recibir más imagen
-
-		
-			print('analysis on process (', os.getpid(), ') -Frame -> ', index) #printea indicador de frame e ID de proceso
 
 			gris = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) #convierte a escala de grises
 			
@@ -158,7 +174,7 @@ def ocr2(ruta_video, conexion):
 							agno = dato3
 							#print(agno)
 			
-			if (index == 440): #analiza el frame 440
+			if (index == 420): #analiza el frame 440
 				
 				for z in range(1, 256): #recorre cada uno de los umbrales
 
@@ -170,7 +186,7 @@ def ocr2(ruta_video, conexion):
 					#cv2.imshow('roi7', ROI7)
 					#cv2.moveWindow('roi7',600,600)
 					aux7 = pytesseract.image_to_string(ROI7).strip() #extrae el dato temporadas
-					if (len(aux7) < 9):
+					if (len(aux7) < 8):
 						aux7 = '@@@'
 					#print('temporadas: ', aux7)
 
@@ -235,6 +251,9 @@ def ocr2(ruta_video, conexion):
 	worksheet2.set_column('A:L', 20, formato)
 	writer.save() #guarda
 	'''
+
+	sys.stdout = salida_std #recuperación de stdout principal
+
 	print(titulo, aux2, modelo, categoria, calidad, agno, temporadas, episodios) #printeo temporal para evitar la escritura constante en excel
 
 	#CÁLCULO TIEMPO FINAL:
@@ -247,7 +266,7 @@ def ocr2(ruta_video, conexion):
 if __name__ == '__main__':
 
 	None #variable nula para evitar unexpected EOF
-	#ocr('/home/viruta/Desktop/Archivos/PROGRAMA/Series/MyBrilliantFriend_Video.mp4')
-	#ocr('/home/viruta/Desktop/Archivos/PROGRAMA/Series/TheOutsider_Video.mp4')
-	#ocr('/home/viruta/Desktop/Archivos/PROGRAMA/Series/Chernobyl_Video.mp4')
+	#ocr2('/home/viruta/Desktop/Archivos/PROGRAMA/Series/MyBrilliantFriend_Video.mp4')
+	#ocr2('/home/viruta/Desktop/Archivos/PROGRAMA/Series/TheOutsider_Video.mp4')
+	#ocr2('/home/viruta/Desktop/Archivos/PROGRAMA/Series/Chernobyl_Video.mp4')
 	

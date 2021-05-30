@@ -66,12 +66,12 @@ def ocr1(ruta_video, conexion1, conexion2): #ruta - pipe1 emisor de imágenes - 
 			sys.stdout.close() #finalización de captura de output
 
 			if (im is None): #si el arreglo contiene valor nulo
+				conexion1.close() #cierre de pipe emisor de imagen
 				sys.stdout = io.StringIO() #inicio captura de output
 				print('traspaso de imágenes a GUI finalizado')
 				out = sys.stdout.getvalue() #asignación variable con los datos output
 				conexion2.send(out) #último envío de output antes de la interrupción del ciclo
 				sys.stdout.close() #finalización de captura de output
-				conexion1.close() #cierre de pipe emisor de imagen
 
 			if not ret: #si ret es false
 				sys.stdout = io.StringIO() #inicio captura de output
@@ -253,6 +253,7 @@ def ocr1(ruta_video, conexion1, conexion2): #ruta - pipe1 emisor de imágenes - 
 	worksheet2.set_column('A:L', 20, formato)
 	writer.save() #guarda
 	'''
+	
 	sys.stdout = salida_std #recuperación de salida standard principal
 
 	print(titulo, proveedor, modelo, categoria, calidad, agno, aux9) #printeo temporal para evitar la escritura constante en excel
@@ -260,7 +261,7 @@ def ocr1(ruta_video, conexion1, conexion2): #ruta - pipe1 emisor de imágenes - 
 	#CÁLCULO TIEMPO FINAL:
 	tiempo_final = (time.time()) #asignamos tiempo final
 	print('\ntiempo de ejecución premium: ', ("{0:.2f}".format(tiempo_final - tiempo_inicial)), 'seg.') #calcula y printea el tiempo total de ejecucion
-
+	
 	video.release()#cierre de video
 	cv2.destroyAllWindows() #cierre de todas las ventanas OpenCV que hayan podido quedar abiertas
 

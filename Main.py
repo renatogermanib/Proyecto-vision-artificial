@@ -17,7 +17,7 @@ from alquiler import ocr3
 #FUNCIONES:
 def ingresar_premium():
 	print('Ingreso premium -> Process (', os.getpid(), ')') #printeo identificación de proceso actual
-	global pipe1, pipe2, pipe3, pipe4 #declaración global para la utilización de variables declaradas en el Main
+	global pipe1, pipe2, pipe3 #declaración global para la utilización de variables declaradas en el Main
 	global labelInfo2
 	ruta_video = filedialog.askopenfilename(initialdir='/home/viruta/Desktop/Archivos/PROGRAMA/Premium', filetypes=[("all video format", '.mp4')])
 	if len(ruta_video) > 0: #si el objeto de askopenfilename tiene un nombre y una ruta, es decir, si se escoge un archivo
@@ -29,11 +29,11 @@ def ingresar_premium():
 
 def ingresar_series():
 	print('Ingreso series -> Process (', os.getpid(), ')')
-	global pipe1, pipe2
+	global pipe1, pipe2, pipe3
 	global labelInfo2
 	ruta_video = filedialog.askopenfilename(initialdir='/home/viruta/Desktop/Archivos/PROGRAMA/Series', filetypes=[('all video format','.mp4')])
 	if len(ruta_video) > 0:
-		p2 = multiprocessing.Process(target=ocr2, args=(ruta_video, pipe1)) #creación de proceso para el análisis series
+		p2 = multiprocessing.Process(target=ocr2, args=(ruta_video, pipe1, pipe3)) #creación de proceso para el análisis series
 		p2.start()
 		visualizar(pipe2) #llamada a la función visualizar, envío de pipe receptor
 	else:
@@ -41,11 +41,11 @@ def ingresar_series():
 
 def ingresar_alquiler():
 	print('Ingreso alquiler -> Process (', os.getpid(), ')')
-	global pipe1, pipe2
+	global pipe1, pipe2, pipe3
 	global labelInfo2
 	ruta_video = filedialog.askopenfilename(initialdir='/home/viruta/Desktop/Archivos/PROGRAMA/Alquiler', filetypes=[('all video format','.mp4')])
 	if len(ruta_video) > 0:
-		p3 = multiprocessing.Process(target=ocr3, args=(ruta_video, pipe1)) #creación de proceso para el análisis alquiler
+		p3 = multiprocessing.Process(target=ocr3, args=(ruta_video, pipe1, pipe3)) #creación de proceso para el análisis alquiler
 		p3.start()
 		visualizar(pipe2) #llamada a la función visualizar, envío de pipe receptor
 	else:
@@ -73,14 +73,15 @@ def visualizar(conexion): #toma como parámetro el pipe receptor
 			root.update() #actualización de ventana principal
 
 def salidas(conexion):
-	print('Captura de salidas -> Process', os.getpid())
-	while (True):
-		salida = conexion.recv()
+	print('Captura de salidas -> Process', os.getpid(), '\n')
+	while (True): #loop infinito
+		salida = conexion.recv() #recibe output de fucionalidad de análisis
 		if (salida is None):
 			print('output vacío')
 			break
 		else:
-			print(salida.strip(), '-in P-> ', os.getpid()) #printeo output proceso de análisis
+			print(salida.strip()) #printeo output proceso de análisis
+			print('display of output in process -> (', os.getpid(), ') \n')
 
 if __name__ == '__main__':
 	print('Main -> Process (', os.getpid(), ')')
