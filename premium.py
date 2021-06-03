@@ -68,14 +68,14 @@ def ocr1(ruta_video, conexion1, conexion2): #ruta - pipe1 emisor de imágenes - 
 			if (im is None): #si el arreglo contiene valor nulo
 				conexion1.close() #cierre de pipe emisor de imagen
 				sys.stdout = io.StringIO() #inicio captura de output
-				print('traspaso de imágenes a GUI finalizado')
+				print('traspaso de imágenes a GUI finalizado      ')
 				out = sys.stdout.getvalue() #asignación variable con los datos output
 				conexion2.send(out) #último envío de output antes de la interrupción del ciclo
 				sys.stdout.close() #finalización de captura de output
 
 			if not ret: #si ret es false
 				sys.stdout = io.StringIO() #inicio captura de output
-				print('no hay imagen, terminando programa... \n')
+				print('no hay imagen, terminando programa...      \n')
 				out = sys.stdout.getvalue() #asignación variable con los datos output
 				conexion2.send(out) #último envío de output antes de la interrupción del ciclo
 				conexion2.send(None)

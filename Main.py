@@ -31,7 +31,7 @@ def ingresar_series():
 	if len(ruta_video) > 0:
 		p2 = multiprocessing.Process(target=ocr2, args=(ruta_video, pipe1, pipe3)) #creación de proceso para el análisis series
 		p2.start()
-		visualizar(pipe2) #llamada a la función visualizar, envío de pipe receptor
+		visualizar(pipe2, pipe4) #llamada a la función visualizar, envío de pipe receptor
 	else:
 		print('se ha cancelado la selección')
 
@@ -41,7 +41,7 @@ def ingresar_alquiler():
 	if len(ruta_video) > 0:
 		p3 = multiprocessing.Process(target=ocr3, args=(ruta_video, pipe1, pipe3)) #creación de proceso para el análisis alquiler
 		p3.start()
-		visualizar(pipe2) #llamada a la función visualizar, envío de pipe receptor
+		visualizar(pipe2, pipe4) #llamada a la función visualizar, envío de pipe receptor
 	else:
 		print('se ha cancelado la selección')
 
@@ -51,10 +51,15 @@ def visualizar(conexion1, conexion2): #toma como parámetro el pipe receptor
 	global root
 	global consola
 	consola.config(text='')
+	im = ''
+	var = ''
 	while (True): #loop infinito
-		im = conexion1.recv() #creación de variable con los datos recibidos por el pipe
-		var = conexion2.recv()
+		if (im is not None):
+			im = conexion1.recv() #creación de variable con los datos recibidos por el pipe
 		
+		if (var is not None):
+			var = conexion2.recv()
+
 		if (im is not None):
 			im = imutils.resize(im, width=1100) #redimensionamiento de imagen
 			im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB) #converción de bgr a rgb, opencv lee en bgr y PIL muestra el rgb
@@ -66,28 +71,26 @@ def visualizar(conexion1, conexion2): #toma como parámetro el pipe receptor
 			output = consola.cget('text') + var
 			consola.config(text=output)
 
+			print(var.strip()) #printeo output proceso de análisis
+			print('display of output in process -> (', os.getpid(), ') \n')
+
 			root.update() #actualización de ventana principal
 
-		if (im is None):
-			root.update()
-
-		if (var is None):
-			output = consola.cget('text') + var
+		elif (var is None):
+			print('el output es nulo')
+			output = consola.cget('text')
 			consola.config(text=output)
 			break
 
-'''
-def salidas(conexion):
-	print('Captura de salidas -> Process', os.getpid(), '\n')
-	while (True): #loop infinito
-		salida = conexion.recv() #recibe output de fucionalidad de análisis
-		if (salida is None):
-			print('output vacío')
-			break
-		else:
-			print(salida.strip()) #printeo output proceso de análisis
+		elif (im is None):
+			print('la imagen es nula')
+			print(var.strip()) #printeo output proceso de análisis
 			print('display of output in process -> (', os.getpid(), ') \n')
-'''
+			output = consola.cget('text') + var
+			consola.config(text=output)
+			root.update()
+
+
 if __name__ == '__main__':
 	print('Main -> Process (', os.getpid(), ')')
 	pipe1, pipe2 = multiprocessing.Pipe() #pipe1: emisor - pipe2: receptor (imágenes de análisis)
@@ -101,7 +104,7 @@ if __name__ == '__main__':
 	#creación de fuentes a utilizar
 	fuenteTitulos = font.Font(family='Ubuntu Condensed', size=40, weight='bold')
 	fuentePrincipal = font.Font(family='Ubuntu Condensed', size=40)
-	fuenteConsola = font.Font(family='Courier')
+	fuenteConsola = font.Font(family='Courier', size=14)
 
 	borde = Frame(root, bg='lightblue', bd=10) #creación de frame contenedor, su objetivo es generar un efecto de borde en el label
 	borde.place(relx=0.04, rely=0.05) #utilización de posicionamiento relativo (posicionamiento dinámico)
@@ -124,15 +127,10 @@ if __name__ == '__main__':
 	btnVisualizarAlquiler.place(relx=0.7, rely=0.38)
 	btnVisualizarAlquiler['font'] = fuentePrincipal
 
-	consola = Label(root, bg='sky blue', font=fuenteConsola, anchor=SW, width=75, height=14)
-	consola.place(relx=0.1, rely=0.73)
+	bordeConsola = Frame(root, bg='lightblue', bd=10)
+	bordeConsola.place(relx=0.1, rely=0.73)
 
-	#tfield = Text(root)
-	#tfield.place(relx=0.1, rely=0.73)
-	#for line in os.popen("run_command", 'r'):
-		#tfield.insert("end", line)
-
-	#wid = consola.winfo_id()
-	#os.system('xterm -into %d -geometry 100x20 -sb &' % wid)
+	consola = Label(bordeConsola, bg='gray8', font=fuenteConsola, width=55, height=11, anchor=SW, foreground='SpringGreen2')
+	consola.pack()
 	
 	root.mainloop() #loop que mantiene abierta la ventana durante la ejecución del aplicativo
