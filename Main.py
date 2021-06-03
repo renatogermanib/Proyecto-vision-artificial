@@ -17,61 +17,66 @@ from alquiler import ocr3
 #FUNCIONES:
 def ingresar_premium():
 	print('Ingreso premium -> Process (', os.getpid(), ')') #printeo identificación de proceso actual
-	global pipe1, pipe2, pipe3 #declaración global para la utilización de variables declaradas en el Main
-	global labelInfo2
 	ruta_video = filedialog.askopenfilename(initialdir='/home/viruta/Desktop/Archivos/PROGRAMA/Premium', filetypes=[("all video format", '.mp4')])
 	if len(ruta_video) > 0: #si el objeto de askopenfilename tiene un nombre y una ruta, es decir, si se escoge un archivo
 		p1 = multiprocessing.Process(target=ocr1, args=(ruta_video, pipe1, pipe3)) #creación de proceso para el análisis premium
 		p1.start()
-		visualizar(pipe2) #llamada a la función visualizar, envío de pipe receptor
+		visualizar(pipe2, pipe4) #llamada a la función visualizar, envío de pipe receptor
 	else:
-		labelInfo2.configure(text='se ha cancelado la selección') #en caso de haber cancelado la elección de video
+		print('se ha cancelado la selección') #en caso de haber cancelado la elección de video
 
 def ingresar_series():
 	print('Ingreso series -> Process (', os.getpid(), ')')
-	global pipe1, pipe2, pipe3
-	global labelInfo2
 	ruta_video = filedialog.askopenfilename(initialdir='/home/viruta/Desktop/Archivos/PROGRAMA/Series', filetypes=[('all video format','.mp4')])
 	if len(ruta_video) > 0:
 		p2 = multiprocessing.Process(target=ocr2, args=(ruta_video, pipe1, pipe3)) #creación de proceso para el análisis series
 		p2.start()
 		visualizar(pipe2) #llamada a la función visualizar, envío de pipe receptor
 	else:
-		labelInfo2.configure(text='se ha cancelado la selección')
+		print('se ha cancelado la selección')
 
 def ingresar_alquiler():
 	print('Ingreso alquiler -> Process (', os.getpid(), ')')
-	global pipe1, pipe2, pipe3
-	global labelInfo2
 	ruta_video = filedialog.askopenfilename(initialdir='/home/viruta/Desktop/Archivos/PROGRAMA/Alquiler', filetypes=[('all video format','.mp4')])
 	if len(ruta_video) > 0:
 		p3 = multiprocessing.Process(target=ocr3, args=(ruta_video, pipe1, pipe3)) #creación de proceso para el análisis alquiler
 		p3.start()
 		visualizar(pipe2) #llamada a la función visualizar, envío de pipe receptor
 	else:
-		labelInfo2.configure(text='se ha cancelado la selección')
+		print('se ha cancelado la selección')
 
-def visualizar(conexion): #toma como parámetro el pipe receptor
+def visualizar(conexion1, conexion2): #toma como parámetro el pipe receptor
 	print('Visualización de análisis -> Process (', os.getpid(), ')')
 	global labelVideo #declaración global para la utilización de la variable declarada en el Main
 	global root
-	global pipe4
-	p4 = multiprocessing.Process(target=salidas, args=[pipe4, ]) #llamada a la función salidas, envío de pipe receptor
-	p4.start()
+	global consola
+	consola.config(text='')
 	while (True): #loop infinito
-		im = conexion.recv() #creación de variable con los datos recibidos por el pipe
-		if (im is None):
-			root.update() #ejecución de un último update antes del break, con el propósito de eliminar el último frame de reproducción
-			break
-		else:
+		im = conexion1.recv() #creación de variable con los datos recibidos por el pipe
+		var = conexion2.recv()
+		
+		if (im is not None):
 			im = imutils.resize(im, width=1100) #redimensionamiento de imagen
 			im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB) #converción de bgr a rgb, opencv lee en bgr y PIL muestra el rgb
 			im = Image.fromarray(im) #conversión de imagen rgb a arreglo
 			im = ImageTk.PhotoImage(im) #conversión de arreglo a un objeto de imagen PIL
 			labelVideo['image'] = im #asignación de imágenes al label de video
 			labelVideo.pack() #método pack, se ejecuta dentro de la función con el propósito de que el frame se visualice en el tamaño definido en el Main
+			
+			output = consola.cget('text') + var
+			consola.config(text=output)
+
 			root.update() #actualización de ventana principal
 
+		if (im is None):
+			root.update()
+
+		if (var is None):
+			output = consola.cget('text') + var
+			consola.config(text=output)
+			break
+
+'''
 def salidas(conexion):
 	print('Captura de salidas -> Process', os.getpid(), '\n')
 	while (True): #loop infinito
@@ -82,7 +87,7 @@ def salidas(conexion):
 		else:
 			print(salida.strip()) #printeo output proceso de análisis
 			print('display of output in process -> (', os.getpid(), ') \n')
-
+'''
 if __name__ == '__main__':
 	print('Main -> Process (', os.getpid(), ')')
 	pipe1, pipe2 = multiprocessing.Pipe() #pipe1: emisor - pipe2: receptor (imágenes de análisis)
@@ -96,6 +101,7 @@ if __name__ == '__main__':
 	#creación de fuentes a utilizar
 	fuenteTitulos = font.Font(family='Ubuntu Condensed', size=40, weight='bold')
 	fuentePrincipal = font.Font(family='Ubuntu Condensed', size=40)
+	fuenteConsola = font.Font(family='Courier')
 
 	borde = Frame(root, bg='lightblue', bd=10) #creación de frame contenedor, su objetivo es generar un efecto de borde en el label
 	borde.place(relx=0.04, rely=0.05) #utilización de posicionamiento relativo (posicionamiento dinámico)
@@ -118,8 +124,8 @@ if __name__ == '__main__':
 	btnVisualizarAlquiler.place(relx=0.7, rely=0.38)
 	btnVisualizarAlquiler['font'] = fuentePrincipal
 
-	#consola = Frame(root, bg='brown', width=600, height=200)
-	#consola.place(relx=0.1, rely=0.73)
+	consola = Label(root, bg='sky blue', font=fuenteConsola, anchor=SW, width=75, height=14)
+	consola.place(relx=0.1, rely=0.73)
 
 	#tfield = Text(root)
 	#tfield.place(relx=0.1, rely=0.73)
