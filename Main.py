@@ -8,7 +8,7 @@ from PIL import Image
 from PIL import ImageTk
 import cv2
 import imutils
-import os
+import os, sys, subprocess
 #MÓDULOS Y SUS FUNCIONES:
 from premium import ocr1
 from series import ocr2
@@ -50,6 +50,8 @@ def visualizar(conexion1, conexion2): #toma como parámetro el pipe receptor
 	global labelVideo #declaración global para la utilización de la variable declarada en el Main
 	global root
 	global consola
+	global btnObtenerDatos
+	btnObtenerDatos['state'] = DISABLED
 	consola.config(text='')
 	im = ''
 	var = ''
@@ -80,6 +82,7 @@ def visualizar(conexion1, conexion2): #toma como parámetro el pipe receptor
 			print('el output es nulo')
 			output = consola.cget('text')
 			consola.config(text=output)
+			btnObtenerDatos['state'] = NORMAL
 			break
 
 		elif (im is None):
@@ -90,6 +93,13 @@ def visualizar(conexion1, conexion2): #toma como parámetro el pipe receptor
 			consola.config(text=output)
 			root.update()
 
+def obtener_datos():
+	print('Obtener datos -> (', os.getpid(), ')')
+	if sys.platform == 'win32': #en caso de que el aplicativo se esté ejecutando en windows
+		os.starfile('/home/viruta/Desktop/Archivos/PROGRAMA')
+	else:
+		abridor = 'open' if sys.platform == 'darwin' else 'xdg-open' #en caso de que el aplicativo se esté ejecutando en linux
+		subprocess.call([abridor, '/home/viruta/Desktop/Archivos/PROGRAMA'])
 
 if __name__ == '__main__':
 	print('Main -> Process (', os.getpid(), ')')
@@ -105,6 +115,7 @@ if __name__ == '__main__':
 	fuenteTitulos = font.Font(family='Ubuntu Condensed', size=40, weight='bold')
 	fuentePrincipal = font.Font(family='Ubuntu Condensed', size=40)
 	fuenteConsola = font.Font(family='Courier', size=14)
+	fuenteBtnDatos = font.Font(family='Ubuntu Condensed', size=30)
 
 	borde = Frame(root, bg='lightblue', bd=10) #creación de frame contenedor, su objetivo es generar un efecto de borde en el label
 	borde.place(relx=0.04, rely=0.05) #utilización de posicionamiento relativo (posicionamiento dinámico)
@@ -126,6 +137,10 @@ if __name__ == '__main__':
 	btnVisualizarAlquiler = Button(root, text='Alquiler', width=10, command=ingresar_alquiler, bg='#0052cc', fg='#ffffff')
 	btnVisualizarAlquiler.place(relx=0.7, rely=0.38)
 	btnVisualizarAlquiler['font'] = fuentePrincipal
+
+	btnObtenerDatos = Button(root, text='Obtener datos', command=obtener_datos, width=12, bg='#0052cc', fg='#ffffff', font='Ubuntu')
+	btnObtenerDatos.place(relx=0.47, rely=0.83)
+	btnObtenerDatos['font'] = fuenteBtnDatos
 
 	bordeConsola = Frame(root, bg='lightblue', bd=10)
 	bordeConsola.place(relx=0.1, rely=0.73)

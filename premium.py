@@ -227,7 +227,7 @@ def ocr1(ruta_video, conexion1, conexion2): #ruta - pipe1 emisor de imágenes - 
 			print('se ha detenido la ejecucion')
 			break #si se presiona la letra S se detendra el programa
 
-	'''
+	
 	#ESCRITURA EN DOCUMENTO EXCEL:
 	extraccion = {'TÍTULO':[titulo], 'PROVEEDOR':[proveedor], 'MODELO DE NEGOCIO':[modelo], 'CATEGORÍA':[categoria], 'CALIDAD':[calidad], 'AGNO':[agno], 'PRECIO':[aux9]} #creación de diccionario con los datos extraídos
 	df_extraccion = pd.DataFrame(extraccion) #creación de dataframe con el diccionario de extracción
@@ -252,7 +252,7 @@ def ocr1(ruta_video, conexion1, conexion2): #ruta - pipe1 emisor de imágenes - 
 	worksheet1.set_column('A:L', 20, formato) #establece formato -> columna A hasta la L, con un ancho de 20 por casilla
 	worksheet2.set_column('A:L', 20, formato)
 	writer.save() #guarda
-	'''
+	
 	
 	sys.stdout = salida_std #recuperación de salida standard principal
 
