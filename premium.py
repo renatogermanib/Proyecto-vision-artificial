@@ -271,4 +271,3 @@ if __name__ == '__main__':
 	#ocr('/home/viruta/Desktop/Archivos/PROGRAMA/Premium/ThisIsUs_Video.mp4')
 	#ocr('/home/viruta/Desktop/Archivos/PROGRAMA/Premium/PlanetaHostil_Video.mp4')
 	#ocr('/home/viruta/Desktop/Archivos/PROGRAMA/Premium/GuerrillaDelOro_Video.mp4')
-	

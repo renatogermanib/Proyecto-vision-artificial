@@ -269,4 +269,3 @@ if __name__ == '__main__':
 	#ocr2('/home/viruta/Desktop/Archivos/PROGRAMA/Series/MyBrilliantFriend_Video.mp4')
 	#ocr2('/home/viruta/Desktop/Archivos/PROGRAMA/Series/TheOutsider_Video.mp4')
 	#ocr2('/home/viruta/Desktop/Archivos/PROGRAMA/Series/Chernobyl_Video.mp4')
-	
