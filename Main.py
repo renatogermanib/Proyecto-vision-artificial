@@ -107,6 +107,7 @@ if __name__ == '__main__':
 	pipe3, pipe4 = multiprocessing.Pipe() #pipe3: emisor - pipe4: receptor (stdout procesos de análisis)
 
 	root = Tk() #creación de ventana principal
+	root.config(bg='LightSkyBlue3')
 	root.title('ANÁLISIS VOD') #asignación de título a la ventana
 	w, h = root.winfo_screenwidth(), root.winfo_screenheight() #calcula el ancho y alto máximo de la pantalla
 	root.geometry('%dx%d+0+0' % (w, h)) #maximiza la ventana principal a su tamaño máximo
@@ -117,35 +118,81 @@ if __name__ == '__main__':
 	fuenteConsola = font.Font(family='Courier', size=14)
 	fuenteBtnDatos = font.Font(family='Ubuntu Condensed', size=30)
 
+	#CREACIÓN FRAME CONTENEDOR DE VIDEO:
 	borde = Frame(root, bg='lightblue', bd=10) #creación de frame contenedor, su objetivo es generar un efecto de borde en el label
 	borde.place(relx=0.04, rely=0.05) #utilización de posicionamiento relativo (posicionamiento dinámico)
-
 	ContenedorVideo = Frame(borde, bg='gray', width=1100, height=618) #ancho y alto correspondiente al tamaño asignado por imutils.resize
 	ContenedorVideo.pack()
-
 	labelVideo = Label(ContenedorVideo, bg='gray') #label donde se reproducirá el video, su método pack() se encuentra en la función visualizar, con el propósito de no distorcionar el tamaño asignado en el frame contenedor de video.
 
-	#BOTONES:
-	btnVisualizarPremium = Button(root, text='Premium', width=10, command=ingresar_premium, bg='#0052cc', fg='#ffffff') #creación de botón, columnspan permite centrar el botón entre dos columnas, el número especifica la cantidad de columnas
-	btnVisualizarPremium.place(relx=0.7, rely=0.1) #pad x e y especifica la separación que tendrá frente a los widgets
-	btnVisualizarPremium['font'] = fuentePrincipal
-	
-	btnVisualizarSeries = Button(root, text='Series', width=10, command=ingresar_series, bg='#0052cc', fg='#ffffff')
-	btnVisualizarSeries.place(relx=0.7, rely=0.24)
-	btnVisualizarSeries['font'] = fuentePrincipal
-	
-	btnVisualizarAlquiler = Button(root, text='Alquiler', width=10, command=ingresar_alquiler, bg='#0052cc', fg='#ffffff')
-	btnVisualizarAlquiler.place(relx=0.7, rely=0.38)
-	btnVisualizarAlquiler['font'] = fuentePrincipal
-
-	btnObtenerDatos = Button(root, text='Obtener datos', command=obtener_datos, width=12, bg='#0052cc', fg='#ffffff', font='Ubuntu')
-	btnObtenerDatos.place(relx=0.47, rely=0.83)
-	btnObtenerDatos['font'] = fuenteBtnDatos
-
+	#CREACIÓN WIDGET DE CONSOLA:
 	bordeConsola = Frame(root, bg='lightblue', bd=10)
 	bordeConsola.place(relx=0.1, rely=0.73)
-
 	consola = Label(bordeConsola, bg='gray8', font=fuenteConsola, width=55, height=11, anchor=SW, foreground='SpringGreen2')
 	consola.pack()
+
+	#BOTÓN PREMIUM:
+	ImPremiumInactivo = Image.open("/home/viruta/Desktop/Archivos/PROGRAMA/Disegnos/BotonPremiumInactivo.png") #lectura de diseño png correspondiente al botón de series
+	ImPremiumActivo = Image.open("/home/viruta/Desktop/Archivos/PROGRAMA/Disegnos/BotonPremiumActivo.png")
+	root.ImPremiumInactivo = ImageTk.PhotoImage(ImPremiumInactivo)
+	root.ImPremiumActivo = ImageTk.PhotoImage(ImPremiumActivo)
+
+	btnVisualizarPremium = Button(root, image=root.ImPremiumInactivo, command=ingresar_premium, borderwidth=0, highlightthickness=0, activebackground="LightSkyBlue3", bg='LightSkyBlue3') #creación de button
+	btnVisualizarPremium.place(relx=0.7, rely=0.1) #pad x e y especifica la separación que tendrá frente a los widgets
+
+	def dentroP(event): #mientras el cursor esté encima del button
+		btnVisualizarPremium.config(image=root.ImPremiumActivo) #se asigna el diseño de botón activo
+	def fueraP(enter): #mientras el cursor esté fuera del button
+		btnVisualizarPremium.config(image=root.ImPremiumInactivo) #se asigna el diseño del botón inactivo
+	btnVisualizarPremium.bind("<Leave>", fueraP)
+	btnVisualizarPremium.bind("<Enter>", dentroP)
+	
+	#BOTÓN SERIES:
+	ImSeriesInactivo = Image.open("/home/viruta/Desktop/Archivos/PROGRAMA/Disegnos/BotonSeriesInactivo.png") #lectura de diseño png correspondiente al botón de series
+	ImSeriesActivo = Image.open("/home/viruta/Desktop/Archivos/PROGRAMA/Disegnos/BotonSeriesActivo.png")
+	root.ImSeriesInactivo = ImageTk.PhotoImage(ImSeriesInactivo)
+	root.ImSeriesActivo = ImageTk.PhotoImage(ImSeriesActivo)
+
+	btnVisualizarSeries = Button(root, image=root.ImSeriesInactivo, command=ingresar_series, borderwidth=0, highlightthickness=0, activebackground="LightSkyBlue3", bg='LightSkyBlue3') #creación de button
+	btnVisualizarSeries.place(relx=0.7, rely=0.24)
+
+	def dentroS(event): #mientras el cursor esté encima del button
+		btnVisualizarSeries.config(image=root.ImSeriesActivo) #se asigna el diseño de botón activo
+	def fueraS(enter): #mientras el cursor esté fuera del button
+		btnVisualizarSeries.config(image=root.ImSeriesInactivo) #se asigna el diseño del botón inactivo
+	btnVisualizarSeries.bind("<Leave>", fueraS)
+	btnVisualizarSeries.bind("<Enter>", dentroS)
+
+	#BOTÓN ALQUILER:
+	ImAlquilerInactivo = Image.open("/home/viruta/Desktop/Archivos/PROGRAMA/Disegnos/BotonAlquilerInactivo.png") #lectura de diseño png correspondiente al botón de alquiler
+	ImAlquilerActivo = Image.open("/home/viruta/Desktop/Archivos/PROGRAMA/Disegnos/BotonAlquilerActivo.png")
+	root.ImAlquilerInactivo = ImageTk.PhotoImage(ImAlquilerInactivo)
+	root.ImAlquilerActivo = ImageTk.PhotoImage(ImAlquilerActivo)
+
+	btnVisualizarAlquiler = Button(root, image=root.ImAlquilerInactivo, command=ingresar_alquiler, borderwidth=0, highlightthickness=0, activebackground="LightSkyBlue3", bg='LightSkyBlue3') #creación de button
+	btnVisualizarAlquiler.place(relx=0.7, rely=0.38)
+
+	def dentroA(event): #mientras el cursor esté encima del button
+		btnVisualizarAlquiler.config(image=root.ImAlquilerActivo) #se asigna el diseño de botón activo
+	def fueraA(enter): #mientras el cursor esté fuera del button
+		btnVisualizarAlquiler.config(image=root.ImAlquilerInactivo) #se asigna el diseño del botón inactivo
+	btnVisualizarAlquiler.bind("<Leave>", fueraA)
+	btnVisualizarAlquiler.bind("<Enter>", dentroA)
+
+	#BOTÓN OBTENER DATOS:
+	ImObtenerDatosInactivo = Image.open("/home/viruta/Desktop/Archivos/PROGRAMA/Disegnos/BotonObtenerDatosInactivo.png") #lectura de diseño png correspondiente al botón de obtener datos
+	ImObtenerDatosActivo = Image.open("/home/viruta/Desktop/Archivos/PROGRAMA/Disegnos/BotonObtenerDatosActivo.png")
+	root.ImObtenerDatosInactivo = ImageTk.PhotoImage(ImObtenerDatosInactivo)
+	root.ImObtenerDatosActivo = ImageTk.PhotoImage(ImObtenerDatosActivo)
+
+	btnObtenerDatos = Button(root, image=root.ImObtenerDatosInactivo, command=obtener_datos, borderwidth=0, highlightthickness=0, activebackground="LightSkyBlue3", bg='LightSkyBlue3') #creación de button
+	btnObtenerDatos.place(relx=0.47, rely=0.83)
+	
+	def dentroD(event): #mientras el cursor esté encima del button
+		btnObtenerDatos.config(image=root.ImObtenerDatosActivo) #se asigna el diseño de botón activo
+	def fueraD(enter): #mientras el cursor esté fuera del button
+		btnObtenerDatos.config(image=root.ImObtenerDatosInactivo) #se asigna el diseño del botón inactivo
+	btnObtenerDatos.bind("<Leave>", fueraD)
+	btnObtenerDatos.bind("<Enter>", dentroD)
 	
 	root.mainloop() #loop que mantiene abierta la ventana durante la ejecución del aplicativo
