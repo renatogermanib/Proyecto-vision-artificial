@@ -107,9 +107,12 @@ if __name__ == '__main__':
 	pipe3, pipe4 = multiprocessing.Pipe() #pipe3: emisor - pipe4: receptor (stdout procesos de análisis)
 
 	root = Tk() #creación de ventana principal
-	root.config(bg='LightSkyBlue3')
+	fondo = PhotoImage(file='/home/viruta/Desktop/Archivos/PROGRAMA/Disegnos/Background.png')
+	LabelFondo = Label(root, image=fondo)
+	LabelFondo.pack()
 	root.title('ANÁLISIS VOD') #asignación de título a la ventana
-	w, h = root.winfo_screenwidth(), root.winfo_screenheight() #calcula el ancho y alto máximo de la pantalla
+	#w, h = root.winfo_screenwidth(), root.winfo_screenheight() #calcula el ancho y alto máximo de la pantalla
+	w, h = fondo.width(), fondo.height()
 	root.geometry('%dx%d+0+0' % (w, h)) #maximiza la ventana principal a su tamaño máximo
 
 	#creación de fuentes a utilizar
@@ -137,7 +140,7 @@ if __name__ == '__main__':
 	root.ImPremiumInactivo = ImageTk.PhotoImage(ImPremiumInactivo)
 	root.ImPremiumActivo = ImageTk.PhotoImage(ImPremiumActivo)
 
-	btnVisualizarPremium = Button(root, image=root.ImPremiumInactivo, command=ingresar_premium, borderwidth=0, highlightthickness=0, activebackground="LightSkyBlue3", bg='LightSkyBlue3') #creación de button
+	btnVisualizarPremium = Button(root, image=root.ImPremiumInactivo, command=ingresar_premium, borderwidth=0, highlightthickness=0, activebackground="#465e80", bg='#465e80') #creación de button
 	btnVisualizarPremium.place(relx=0.7, rely=0.1) #pad x e y especifica la separación que tendrá frente a los widgets
 
 	def dentroP(event): #mientras el cursor esté encima del button
@@ -153,7 +156,7 @@ if __name__ == '__main__':
 	root.ImSeriesInactivo = ImageTk.PhotoImage(ImSeriesInactivo)
 	root.ImSeriesActivo = ImageTk.PhotoImage(ImSeriesActivo)
 
-	btnVisualizarSeries = Button(root, image=root.ImSeriesInactivo, command=ingresar_series, borderwidth=0, highlightthickness=0, activebackground="LightSkyBlue3", bg='LightSkyBlue3') #creación de button
+	btnVisualizarSeries = Button(root, image=root.ImSeriesInactivo, command=ingresar_series, borderwidth=0, highlightthickness=0, activebackground="#465e80", bg='#465e80') #creación de button
 	btnVisualizarSeries.place(relx=0.7, rely=0.24)
 
 	def dentroS(event): #mientras el cursor esté encima del button
@@ -169,7 +172,7 @@ if __name__ == '__main__':
 	root.ImAlquilerInactivo = ImageTk.PhotoImage(ImAlquilerInactivo)
 	root.ImAlquilerActivo = ImageTk.PhotoImage(ImAlquilerActivo)
 
-	btnVisualizarAlquiler = Button(root, image=root.ImAlquilerInactivo, command=ingresar_alquiler, borderwidth=0, highlightthickness=0, activebackground="LightSkyBlue3", bg='LightSkyBlue3') #creación de button
+	btnVisualizarAlquiler = Button(root, image=root.ImAlquilerInactivo, command=ingresar_alquiler, borderwidth=0, highlightthickness=0, activebackground="#465e80", bg='#465e80') #creación de button
 	btnVisualizarAlquiler.place(relx=0.7, rely=0.38)
 
 	def dentroA(event): #mientras el cursor esté encima del button
@@ -185,7 +188,7 @@ if __name__ == '__main__':
 	root.ImObtenerDatosInactivo = ImageTk.PhotoImage(ImObtenerDatosInactivo)
 	root.ImObtenerDatosActivo = ImageTk.PhotoImage(ImObtenerDatosActivo)
 
-	btnObtenerDatos = Button(root, image=root.ImObtenerDatosInactivo, command=obtener_datos, borderwidth=0, highlightthickness=0, activebackground="LightSkyBlue3", bg='LightSkyBlue3') #creación de button
+	btnObtenerDatos = Button(root, image=root.ImObtenerDatosInactivo, command=obtener_datos, borderwidth=0, highlightthickness=0, activebackground="#465e80", bg='#465e80') #creación de button
 	btnObtenerDatos.place(relx=0.47, rely=0.83)
 	
 	def dentroD(event): #mientras el cursor esté encima del button
